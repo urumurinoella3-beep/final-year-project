@@ -1,0 +1,51 @@
+@startuml
+title Figure 4: System Administrator - Authentication & User Management
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 11
+skinparam dpi 150
+cduenceMessageAlign center
+
+actor "System\nAdministrator" as Admin
+participant "System" as System
+database "Database" as DB
+participant "Authentication" as Auth
+participant "Email\nService" as Email
+
+== Login ==
+Admin -> System: Login Request\n(email, password)
+System -> Auth: Validate Credentials
+Auth -> DB: Check User\n(email, password_hash)
+DB --> Auth: User Found\n(role=ADMIN)
+Auth --> System: Authentication Success\n(JWT Token)
+System --> Admin: Login Successful\n(Redirect to Dashboard)
+
+== User Management ==
+
+Admin -> System: Create User\n(Employee ID, Name, Email,\nPhone, Role, Department)
+System -> System: Generate Temporary\nPassword (8 chars)
+System -> System: Hash Password\n(BCrypt)
+System -> DB: Insert User Record\n(isFirstLogin=true)
+DB --> System: User Created\n(User ID)
+System -> Email: Send Welcome Email\n(Credentials + Login URL)
+Email --> Admin: Email Sent Confirmation
+System --> Admin: User Created Successfully\n(Show Employee ID)
+
+Admin -> System: View All Users
+System -> DB: SELECT * FROM users
+DB --> System: User List\n(All Departments)
+System --> Admin: Display Users Table\n(Name, Email, Role, Department)
+
+Admin -> System: Update User\n(Change Role/Department)
+System -> DB: UPDATE users\nSET role, department
+DB --> System: User Updated
+System -> Email: Send Notification\n(Role/Department Changed)
+System --> Admin: User Updated Successfully
+
+Admin -> System: Deactivate User\n(User ID)
+System -> DB: UPDATE users\nSET isActive=false
+DB --> System: User Deactivated
+System -> DB: INSERT audit_log\n(Action: USER_DEACTIVATED)
+System --> Admin: User Deactivated\nSuccessfully
+
+@enduml

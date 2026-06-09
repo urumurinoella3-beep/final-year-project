@@ -1,0 +1,314 @@
+@startuml DQIMS_Class_Diagram_A4
+!theme plain
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 40
+skinparam padding 2
+skinparam classAttributeIconSize 0
+
+' Optimized for A4 paper (portrait)
+skinparam dpi 300
+skinparam defaultFontSize 9
+skinparam defaultFontName Arial
+
+skinparam class {
+    BackgroundColor<<core>> #E8F5E9
+    BackgroundColor<<validation>> #E3F2FD
+    BackgroundColor<<analysis>> #FFF3E0
+    BackgroundColor<<system>> #FCE4EC
+    BackgroundColor<<integration>> #F3E5F5
+    BorderColor #20603D
+    BorderThickness 1
+    ArrowColor #20603D
+    FontSize 9
+}
+
+title DQIMS - Complete Class Diagram\nData Quality Issues Management System - Rwanda Revenue Authority
+
+' ==================== CORE DOMAIN ====================
+
+package "Core Domain" <<core>> {
+    
+    class Department <<core>> {
+        id: UUID
+        deptCode: String
+        deptName: String
+        isActive: Boolean
+        --
+        + activate()
+        + deactivate()
+    }
+    
+    class User <<core>> {
+        id: UUID
+        employeeId: String
+        email: String
+        passwordHash: String
+        fullName: String
+        role: String
+        phone: String
+        isActive: Boolean
+        --
+        + login()
+        + changePassword()
+    }
+    
+    class IssueCategory <<core>> {
+        id: UUID
+        categoryCode: String
+        categoryName: String
+        severityLevel: String
+        colorCode: String
+        --
+        + getName()
+    }
+    
+    class Issue <<core>> {
+        id: UUID
+        issueNumber: String
+        title: String
+        description: String
+        severity: String
+        priority: String
+        status: String
+        dataSource: String
+        affectedRecords: Integer
+        slaDueDate: DateTime
+        slaStatus: String
+        --
+        + assign()
+        + resolve()
+        + updateStatus()
+    }
+    
+    class IssueComment <<core>> {
+        id: UUID
+        commentText: String
+        isInternal: Boolean
+        --
+        + edit()
+    }
+    
+    class RelatedIssue <<core>> {
+        id: UUID
+        relationshipType: String
+        notes: String
+    }
+    
+    class IssueHistory <<core>> {
+        id: UUID
+        changeType: String
+        fieldName: String
+        oldValue: String
+        newValue: String
+    }
+}
+
+' ==================== DATA VALIDATION ====================
+
+package "Data Validation" <<validation>> {
+    
+    class DataValidationRule <<validation>> {
+        id: UUID
+        ruleCode: String
+        ruleName: String
+        validationType: String
+        ruleLogic: String
+        severity: String
+        --
+        + execute()
+        + validate()
+    }
+    
+    class DataValidationExecution <<validation>> {
+        id: UUID
+        executionNumber: String
+        executionStatus: String
+        totalRecordsChecked: Integer
+        recordsPassed: Integer
+        recordsFailed: Integer
+        passRate: Double
+        --
+        + calculatePassRate()
+    }
+    
+    class DataValidationFailure <<validation>> {
+        id: UUID
+        recordIdentifier: String
+        actualValue: String
+        expectedValue: String
+        failureReason: String
+        --
+        + createIssue()
+    }
+}
+
+' ==================== ANALYSIS & REPORTING ====================
+
+package "Analysis" <<analysis>> {
+    
+    class RootCauseAnalysis <<analysis>> {
+        id: UUID
+        analysisMethod: String
+        why1, why2, why3: String
+        rootCause: String
+        correctiveActions: String
+        preventiveActions: String
+        status: String
+        --
+        + approve()
+    }
+    
+    class Report <<analysis>> {
+        id: UUID
+        reportNumber: String
+        reportName: String
+        reportType: String
+        reportData: JSON
+        fileFormat: String
+        --
+        + generate()
+        + export()
+    }
+    
+    class DashboardMetric <<analysis>> {
+        id: UUID
+        metricDate: Date
+        totalIssues: Integer
+        openIssues: Integer
+        slaOnTrack: Integer
+        validationPassRate: Double
+        --
+        + calculate()
+    }
+}
+
+' ==================== SYSTEM & COMPLIANCE ====================
+
+package "System" <<system>> {
+    
+    class AuditLog <<system>> {
+        id: UUID
+        actionType: String
+        moduleName: String
+        entityType: String
+        actionDescription: String
+        ipAddress: String
+        --
+        + log()
+    }
+    
+    class Notification <<system>> {
+        id: UUID
+        notificationType: String
+        title: String
+        message: String
+        isRead: Boolean
+        --
+        + send()
+    }
+    
+    class SLAConfiguration <<system>> {
+        id: UUID
+        slaName: String
+        severity: String
+        responseTimeHours: Integer
+        resolutionTimeHours: Integer
+        --
+        + calculateDueDate()
+    }
+    
+    class SystemSetting <<system>> {
+        id: UUID
+        settingKey: String
+        settingValue: String
+        category: String
+        --
+        + getValue()
+    }
+}
+
+' ==================== INTEGRATION ====================
+
+package "Integration" <<integration>> {
+    
+    class Integration <<integration>> {
+        id: UUID
+        integrationName: String
+        integrationType: String
+        endpointUrl: String
+        status: String
+        --
+        + sync()
+    }
+    
+    class IntegrationLog <<integration>> {
+        id: UUID
+        syncStatus: String
+        recordsProcessed: Integer
+        recordsSuccess: Integer
+        --
+        + getSuccessRate()
+    }
+    
+    class Attachment <<integration>> {
+        id: UUID
+        fileName: String
+        fileSize: Integer
+        filePath: String
+        --
+        + download()
+    }
+}
+
+' ==================== RELATIONSHIPS ====================
+
+' Core relationships
+Department "1" -- "0..*" User
+Department "1" -- "0..*" Issue
+User "1" -- "0..*" Issue : reports
+User "1" -- "0..*" Issue : assigned
+IssueCategory "1" -- "0..*" Issue
+Issue "1" -- "0..*" IssueComment
+Issue "1" -- "0..*" RelatedIssue
+Issue "1" -- "0..*" IssueHistory
+Issue "1" -- "0..1" RootCauseAnalysis
+
+' Validation relationships
+DataValidationRule "1" -- "0..*" DataValidationExecution
+DataValidationExecution "1" -- "0..*" DataValidationFailure
+DataValidationFailure "0..1" -- "0..1" Issue : creates
+
+' System relationships
+User "1" -- "0..*" Notification
+User "1" -- "0..*" AuditLog
+Department "1" -- "0..*" DashboardMetric
+User "1" -- "0..*" Report
+SLAConfiguration "1" -- "0..*" Issue
+
+' Integration relationships
+Integration "1" -- "0..*" IntegrationLog
+Issue "1" -- "0..*" Attachment
+IssueComment "1" -- "0..*" Attachment
+
+' ==================== LEGEND ====================
+
+legend right
+  <b>DQIMS Class Diagram</b>
+  
+  <b>Packages:</b>
+  <back:#E8F5E9>  </back> Core (7 classes)
+  <back:#E3F2FD>  </back> Validation (3 classes)
+  <back:#FFF3E0>  </back> Analysis (3 classes)
+  <back:#FCE4EC>  </back> System (4 classes)
+  <back:#F3E5F5>  </back> Integration (3 classes)
+  
+  <b>Total: 20 Entity Classes</b>
+  
+  <b>RRA Colors:</b>
+  Green: #20603D
+  Blue: #00A1DE
+  Orange: #E5BE01
+end legend
+
+@enduml

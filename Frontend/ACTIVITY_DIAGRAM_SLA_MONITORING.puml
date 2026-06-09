@@ -1,0 +1,338 @@
+@startuml DQIMS_Activity_SLA_Monitoring
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 10
+
+title <size:16><b>DQIMS - SLA Monitoring & Alert Activity Diagram</b></size>\n<size:12>Automated SLA Tracking with Scheduled Jobs</size>\n
+
+|#E3F2FD|System Scheduler|
+start
+
+note right
+  <b>Scheduled Job:</b>
+  Runs every 5 minutes
+  24/7 automated monitoring
+end note
+
+:Trigger: @Scheduled(fixedRate = 300000);
+
+:Execute SLA Update Job;
+
+:Get Current DateTime;
+
+|#E3F2FD|SLA Update Service|
+:Query All Open/In Progress Issues:
+- status IN (OPEN, IN_PROGRESS, PENDING);
+
+if (Issues Found?) then (no)
+  :Log: No Issues to Update;
+  stop
+else (yes)
+endif
+
+:Initialize Counters:
+- checked = 0
+- on_track = 0
+- at_risk = 0
+- breached = 0
+- alerts_sent = 0;
+
+repeat
+  :Get Next Issue;
+  
+  :checked++;
+  
+  :Get Issue Details:
+  - issue_number
+  - severity
+  - sla_due_date
+  - current sla_status
+  - assigned_to
+  - department;
+  
+  :Get SLA Configuration:
+  - resolution_time_hours
+  - warning_threshold_hours;
+  
+  :Calculate Time Remaining:
+  remaining = sla_due_date - now;
+  
+  if (remaining <= 0) then (yes - BREACHED)
+    
+    :Previous Status = sla_status;
+    
+    :Update Issue:
+    sla_status = BREACHED;
+    
+    :breached++;
+    
+    if (Previous Status != BREACHED) then (yes - First Breach)
+      
+      :Create Issue History:
+      "SLA breached";
+      
+      :Create Audit Log:
+      "SLA status changed to BREACHED";
+      
+      |#FFF3E0|Notification Service|
+      split
+        :Create HIGH Priority Notification
+        for Assigned User;
+        
+      split again
+        :Send Email to Assigned User:
+        ❌ SLA BREACHED
+        Issue: [issue_number]
+        Overdue by: [hours]h;
+        
+      split again
+        :Send Email to HOD:
+        CC: SLA Breach Alert
+        Issue: [issue_number];
+        
+      split again
+        :Send Email to ADMIN:
+        Department: [dept]
+        SLA Breach Alert;
+      end split
+      
+      |SLA Update Service|
+      :alerts_sent++;
+      
+    endif
+    
+  else if (remaining <= warning_threshold_hours) then (yes - AT RISK)
+    
+    :Previous Status = sla_status;
+    
+    :Update Issue:
+    sla_status = AT_RISK;
+    
+    :at_risk++;
+    
+    if (Previous Status = ON_TRACK) then (yes - Status Change)
+      
+      :Create Issue History:
+      "SLA at risk - [X] hours remaining";
+      
+      :Create Audit Log:
+      "SLA status changed to AT_RISK";
+      
+      |Notification Service|
+      split
+        :Create MEDIUM Priority Notification;
+        
+      split again
+        :Send Email to Assigned User:
+        ⚠️ SLA WARNING
+        Issue: [issue_number]
+        Time Remaining: [hours]h
+        Due: [sla_due_date];
+      end split
+      
+      |SLA Update Service|
+      :alerts_sent++;
+      
+    endif
+    
+  else (no - ON TRACK)
+    
+    :Update Issue:
+    sla_status = ON_TRACK;
+    
+    :on_track++;
+    
+    note right
+      No notification needed
+      Issue has enough time
+    end note
+    
+  endif
+  
+  :Save Issue to Database;
+  
+repeat while (More Issues?) is (yes)
+->no;
+
+:Log Summary:
+- Total Checked: [checked]
+- On Track: [on_track]
+- At Risk: [at_risk]
+- Breached: [breached]
+- Alerts Sent: [alerts_sent];
+
+:Create Audit Log:
+"SLA monitoring job completed";
+
+' ========== DASHBOARD UPDATE ==========
+
+|#E3F2FD|Dashboard Metrics Service|
+:Update Dashboard Metrics:
+- sla_on_track count
+- sla_at_risk count
+- sla_breached count;
+
+:Refresh Real-time Dashboard;
+
+' ========== USER VIEWS ALERTS ==========
+
+|#FCE4EC|Assigned User|
+:Receive Email Alert;
+
+:Receive In-App Notification;
+
+:Login to DQIMS;
+
+:See Badge: "3 SLA Alerts";
+
+:Navigate to Notifications;
+
+:View Alerts:
+- SLA Warning (2)
+- SLA Breach (1);
+
+:Click on Alert;
+
+:Redirected to Issue Detail;
+
+:See SLA Status Banner:;
+
+if (Status = BREACHED) then (yes)
+  :<color:red>❌ SLA BREACHED</color>
+  <color:red>Overdue by: 5 hours</color>;
+  
+  note right
+    Red banner at top of issue
+    Highly visible alert
+  end note
+  
+  :Read Issue Details;
+  
+  :Take Immediate Action:
+  - Update status
+  - Add comment
+  - Request extension
+  - Escalate if needed;
+  
+else if (Status = AT_RISK) then (yes)
+  :<color:orange>⚠️ SLA AT RISK</color>
+  <color:orange>2 hours remaining</color>;
+  
+  note right
+    Orange/yellow banner
+    Warning to act soon
+  end note
+  
+  :Prioritize Issue;
+  
+  :Work on Resolution;
+  
+else (ON_TRACK)
+  :<color:green>✓ ON TRACK</color>
+  <color:green>15 hours remaining</color>;
+  
+  note right
+    Green banner
+    Good status
+  end note
+  
+endif
+
+:Update Issue Progress;
+
+:Add Comment:
+"Working on resolution. ETA: 2 hours";
+
+:System Updates Issue;
+
+:HOD Monitors Progress;
+
+' ========== RESOLUTION STOPS SLA ==========
+
+if (Issue Resolved?) then (yes)
+  
+  :Member Marks Issue as RESOLVED;
+  
+  |System|
+  :Update Issue:
+  - status = RESOLVED
+  - resolved_at = now
+  - resolved_by = user;
+  
+  :Calculate Resolution Metrics:
+  - total_time = resolved_at - created_at
+  - met_sla = (resolved_at <= sla_due_date);
+  
+  if (met_sla = true) then (yes)
+    :Record: SLA MET ✓;
+    :Increment dept SLA compliance;
+  else (no)
+    :Record: SLA MISSED ✗;
+    :Decrement dept SLA compliance;
+  endif
+  
+  :Create Audit Log;
+  
+  :Stop SLA Monitoring for This Issue;
+  
+  |Assigned User|
+  :Receive Success Notification;
+  
+endif
+
+stop
+
+legend right
+  <b>SLA Status Logic:</b>
+  
+  <b>ON_TRACK (Green)</b>
+  remaining > warning_threshold
+  • Plenty of time
+  • No action needed
+  • Normal monitoring
+  
+  <b>AT_RISK (Yellow/Orange)</b>
+  remaining <= warning_threshold
+  AND remaining > 0
+  • Approaching deadline
+  • Warning notification sent
+  • Prioritize issue
+  
+  <b>BREACHED (Red)</b>
+  remaining <= 0
+  • Past deadline
+  • Critical notification sent
+  • Escalated to HOD + ADMIN
+  • Immediate action required
+  
+  <b>Example SLA Times:</b>
+  
+  <b>CRITICAL Severity:</b>
+  • Resolution: 24 hours
+  • Warning: 20 hours
+  • At Risk: Last 4 hours
+  
+  <b>HIGH Severity:</b>
+  • Resolution: 48 hours
+  • Warning: 40 hours
+  • At Risk: Last 8 hours
+  
+  <b>MEDIUM Severity:</b>
+  • Resolution: 120 hours (5 days)
+  • Warning: 96 hours
+  • At Risk: Last 24 hours
+  
+  <b>Monitoring Schedule:</b>
+  • Runs every 5 minutes
+  • 24/7 automated
+  • No manual intervention
+  • Real-time updates
+  
+  <b>Notifications:</b>
+  • Email + In-App
+  • Assigned User (always)
+  • HOD (if breached)
+  • ADMIN (if breached)
+endlegend
+
+@enduml

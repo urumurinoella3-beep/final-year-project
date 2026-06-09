@@ -1,0 +1,50 @@
+
+titleFigure 9:  Member -   and  Process
+skinparabackgroundCoor #FFFFFF
+skinpram defaultFontSze 11
+skiparam dpi 150aco"\n"aStaff
+acip"FnndUIBckdAIAP\SviceSvcFil\nFil\n\nw==IFID(,,,,,,, Department)
+A///UIVadateFile\n(Type, ze < 10MB)StaffCck"Subi"AP/\n{i daa+ APdourd)FilsveFl(fle)FilFilGenerateUniqFilame
+FleSvc >FilSvc:Svo/va/qim/ile/
+FlSvc->IssueSv: Fil Ph\n(l,description,or,\nata_element,_typ,\nseveriy, proriy,sttus='OPEN',\pr,rt_by)DB-->:Cre (ID)
+ ,\nfile_type, file_sizeDB --> IssueSvc: Attachmt SaveDB INSERT INTO_ls(uer_idaction=''DB-ssuevc:A LCrd
+ UnyHOD){type='NEW_'hodId,I}ns\(uer_id=HOD, type='NEW_SSUE',\ntitle, message, ie_id)
+DB --> NotifSvc: Notification Creatd
+
+NotifNewEml){to: .email:details}- NotifSvc:APAPRS\n( ID:#1234) Work onAgedIue -> UI: View MyIssuesUI- PI:GET/api/issues/ed
+API -> DB: SELECT * FROMs\nWHEREassigned_ = ?\nORDER BYprioriy DESCDB --> API: AssignIssusAPI-{ssu[]}DisplayMyI\(OPEN, IN_PROGRESS)OPENIAPAP APDeil
+API-->UI: {issue}SU -> API: PUT /api/is/{id}/status\n{status: 'IN_PROGRES'}
+   API pdtS(issueId,'')NO()DB-->StpaenotifyStusChang()
+    NotifSvc -> DB: ISERT n(user_i=HODtype=''mail:sedSusEmal()        APScc   AP    UI --> Stff: Sus Changdto\nN_PROGRESS
+ndID(Tie,Descip,)
+
+==Add Progress  ==UI: Click "Add Comment"
+UI --> ShwCmmetBox
+
+Staff -> UI: Ente Commnt\n"Invetigat the rootcau..."Click"PtC"
+AP:"nvetigaing..."}APueId, srAddNotfSvcnofyCmme(NotfSvcnotificton\n(ype='COMMENTADDED')APAPPost== Mak Issu sResolved==
+
+UI: Click "Mark as Resolved"
+UI --> Shw ResoluoMdal
+EntrRoltio Dea\n"Fixddata validatin rus..."UpodEvidence\n(crenht.png)APreolve\n{resoluion: "Fixed...", file}
+
+API -> IssueSvc: resolveIssue(issueId, resolution, file)
+
+IssueSvc -> FileSvc: sveFile(file)
+FileSvc --> IssueSvc: File Pah
+
+IsseSvc -> DB: UPDATE isuesSET = '',\nresoled_ = NOW()
+DB --> IssuSvc:e RsovedIssueSvc -> DB: INSERT NTO ie_comments\n(contn=esoution)
+DB-Resoltion Comment Add
+
+Svc -> DB: INERT INTO issue_atchmen\nfile=evidece)
+DB --> IssueSvc: Evdence Saved
+
+ISvc -> DB: INSERT NTO auit_logs\n(action='ISSUE_')
+
+IssueSvc ->NoiSvc: notiyHOD(\n{type='ISSUE_RESOLVED'}NotifSv -> DB: INSERT noifcion\n(usr_id=HOD)
+NotifSvc -> Email:endReoltionEmail()\n{to: hod.mail}-AP: Succe
+API --> UI 200 OK
+UI-->S:Isue Marked Reolved\n(Waitn for HOD Approval)
+
+@euml

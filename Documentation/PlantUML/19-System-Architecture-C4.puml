@@ -1,0 +1,45 @@
+@startuml DQIMS_System_Architecture_C4
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+!include DEVICONS/react.puml
+!include DEVICONS/java.puml
+!include DEVICONS/mysql.puml
+!include FONTAWESOME/users.puml
+
+LAYOUT_WITH_LEGEND()
+
+title System Architecture Diagram - DQIMS (Data Quality Issues Management System)
+
+Person(admin, "System Admin", "Manages users, departments, views all issues", $sprite="users")
+Person(hod, "Head of Department", "Manages department issues, assigns tasks", $sprite="users")
+Person(staff, "Staff Member", "Reports and resolves issues", $sprite="users")
+
+System_Boundary(dqims, "DQIMS System") {
+    Container(web_app, "Web Application", "React, TypeScript", "Provides user interface for issue management, reporting, and analytics", $sprite="react")
+    
+    Container(api, "API Application", "Spring Boot, Java 17", "Provides REST API, handles authentication, business logic", $sprite="java")
+    
+    ContainerDb(db, "Database", "MySQL 8.0", "Stores users, issues, departments, notifications, audit logs", $sprite="mysql")
+    
+    Container(email, "Email Service", "JavaMail, SMTP", "Sends email notifications to users")
+    
+    Container(file, "File Storage", "File System", "Stores issue attachments, validation files, reports")
+}
+
+System_Ext(smtp, "Gmail SMTP Server", "External email service provider")
+
+Rel(admin, web_app, "Uses", "HTTPS")
+Rel(hod, web_app, "Uses", "HTTPS")
+Rel(staff, web_app, "Uses", "HTTPS")
+
+Rel(web_app, api, "Makes API calls to", "JSON/HTTPS, JWT Token")
+Rel(api, db, "Reads from and writes to", "JDBC, SQL")
+Rel(api, email, "Sends emails using")
+Rel(api, file, "Reads/Writes files")
+Rel(email, smtp, "Sends emails via", "SMTP/TLS")
+
+SHOW_LEGEND()
+
+@enduml

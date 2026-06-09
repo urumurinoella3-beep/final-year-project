@@ -1,0 +1,139 @@
+@startuml DQIMS_System_Overview_Activity
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 11
+
+title <size:18><b>DQIMS - Complete System Overview Activity Diagram</b></size>\n<size:14>High-Level Workflow - Rwanda Revenue Authority</size>\n
+
+|#E8F5E9|User|
+start
+
+:Login to DQIMS;
+note right: Role-based authentication
+
+if (Role?) then (ADMIN)
+  partition "ADMIN Workflows" #E8F5E9 {
+    :Manage Users;
+    :Create Departments;
+    :Configure SLA Rules;
+    :Configure Validation Rules;
+    :View All Departments Data;
+    :Generate System Reports;
+    :Manage Integrations;
+    :View Audit Logs;
+  }
+  
+else if (HOD)
+  partition "HOD Workflows" #E3F2FD {
+    :View Department Dashboard;
+    :Create Issues;
+    :Assign Issues to Team;
+    :Approve Root Cause Analysis;
+    :Generate Department Reports;
+    :Configure Department SLA;
+    :Monitor Team Performance;
+  }
+  
+else if (SECRETARY)
+  partition "SECRETARY Workflows" #FFF3E0 {
+    :View Department Issues;
+    :Create New Issues;
+    :Update Issue Status;
+    :Run Data Validations;
+    :Add Comments;
+    :Upload Attachments;
+    :View Reports;
+  }
+  
+else (MEMBER)
+  partition "MEMBER Workflows" #FCE4EC {
+    :View Assigned Issues;
+    :Update Issue Status;
+    :Add Comments;
+    :Perform Root Cause Analysis;
+    :Mark Issues as Resolved;
+    :Upload Attachments;
+  }
+endif
+
+|#E3F2FD|System Background Processes|
+
+fork
+  :SLA Monitoring (every 5 min);
+  repeat
+    :Check All Open Issues;
+    :Calculate Time Remaining;
+    :Update SLA Status;
+    if (SLA Breached?) then (yes)
+      :Send Alert Notifications;
+    endif
+  repeat while (Continuous) is (yes)
+  
+fork again
+  :Dashboard Metrics (daily);
+  :Calculate Daily Statistics;
+  :Update Dashboard Data;
+  :Generate Trend Charts;
+  
+fork again
+  :Email Notifications;
+  repeat
+    :Check Notification Queue;
+    :Send Emails;
+    :Update Notification Status;
+  repeat while (Continuous) is (yes)
+  
+fork again
+  :Audit Logging;
+  :Record All System Actions;
+  :Track User Activities;
+  :Store Immutable Logs;
+  
+end fork
+
+|User|
+:Logout;
+
+stop
+
+legend right
+  <b>DQIMS System Overview</b>
+  
+  <b>4 User Roles:</b>
+  <back:#E8F5E9>  </back> ADMIN (System Admin)
+  <back:#E3F2FD>  </back> HOD (Department Head)
+  <back:#FFF3E0>  </back> SECRETARY (Data Entry)
+  <back:#FCE4EC>  </back> MEMBER (Team Member)
+  
+  <b>Key Processes:</b>
+  • User Authentication
+  • Issue Management
+  • Data Validation
+  • SLA Monitoring
+  • Root Cause Analysis
+  • Reporting & Analytics
+  • Background Jobs
+  • Notifications
+  • Audit Logging
+  
+  <b>Background Jobs:</b>
+  • Run 24/7
+  • Automated monitoring
+  • No user intervention
+  
+  <b>12 Main Modules:</b>
+  1. Dashboard
+  2. Issue Reporting
+  3. Data Validation
+  4. Issue Classification
+  5. Issue Tracking
+  6. Monitoring
+  7. User Management
+  8. Reporting & Analytics
+  9. Audit & Compliance
+  10. Root Cause Analysis
+  11. Integration
+  12. System Settings
+endlegend
+
+@enduml

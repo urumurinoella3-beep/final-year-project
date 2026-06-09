@@ -1,0 +1,217 @@
+@startuml DQIMS_Activity_Issue_Creation_Assignment
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 10
+
+title <size:16><b>DQIMS - Issue Creation & Assignment Activity Diagram</b></size>\n<size:12>Complete Workflow from Creation to Assignment</size>\n
+
+|#E8F5E9|Reporter (HOD/Secretary)|
+start
+:Navigate to Issue Reporting Module;
+
+:Click "Create New Issue" Button;
+
+:Fill Issue Form:
+- Title
+- Description
+- Category
+- Severity
+- Priority
+- Data Source
+- Affected Records
+- Data Field
+- Tags;
+
+:Upload Attachments (optional);
+
+:Click "Submit" Button;
+
+|#E3F2FD|System|
+:Receive Issue Creation Request;
+
+:Validate JWT Token;
+
+if (Token Valid & User Authorized?) then (no)
+  :Return Error: Unauthorized;
+  |Reporter (HOD/Secretary)|
+  stop
+else (yes)
+endif
+
+:Validate Form Data;
+
+if (All Required Fields Present?) then (no)
+  :Return Validation Errors;
+  |Reporter (HOD/Secretary)|
+  :Fix Validation Errors;
+  :Resubmit Form;
+  |System|
+endif
+
+:Begin Database Transaction;
+
+:Generate Unique Issue Number;
+note right: ISS-2026-NNNN format
+
+:Query SLA Configuration by:
+- Severity
+- Category
+- Department;
+
+if (SLA Config Found?) then (yes)
+  :Calculate SLA Due Date;
+  :Set SLA Status = ON_TRACK;
+else (no)
+  :Use Default SLA (by severity);
+  :Calculate Due Date;
+endif
+
+:Create Issue Record:
+- status = OPEN
+- reported_by = current user
+- department_id = user's department
+- created_at = now;
+
+:Save Issue to Database;
+
+if (Attachments Present?) then (yes)
+  fork
+    :Upload Files to Storage;
+  fork again
+    :Create Attachment Records;
+  end fork
+  :Link Attachments to Issue;
+endif
+
+:Create Issue History Entry:
+"Issue created by [User Name]";
+
+:Create Audit Log Entry:
+- action = CREATE
+- module = IssueReporting
+- entity = Issue
+- user = current user;
+
+:Commit Transaction;
+
+|#FFF3E0|Notification Service|
+fork
+  :Create Notification for Department HOD:
+  "New issue ISS-XXXX-YYYY created";
+fork again
+  :Send Email to Department HOD;
+end fork
+
+|System|
+:Return Success Response with:
+- Issue ID
+- Issue Number
+- Created At
+- SLA Due Date;
+
+|Reporter (HOD/Secretary)|
+:Display Success Message;
+
+:Redirect to Issue Detail Page;
+
+note left
+  <b>Issue is now created</b>
+  with status = OPEN
+  waiting for assignment
+end note
+
+' ========== ASSIGNMENT WORKFLOW ==========
+
+|#E8F5E9|HOD (Head of Department)|
+:Receive Notification;
+
+:View Department Issues List;
+
+:Open Issue Detail Page;
+
+:Review Issue Details;
+
+:Click "Assign Issue" Button;
+
+:Select Team Member from Department;
+
+:Add Assignment Notes (optional);
+
+:Click "Assign" Button;
+
+|#E3F2FD|System|
+:Receive Assignment Request;
+
+:Validate:
+- User is HOD or ADMIN
+- Assignee is in same department
+- Issue is not already assigned;
+
+if (Validation Passed?) then (no)
+  :Return Error: Cannot Assign;
+  |HOD (Head of Department)|
+  stop
+else (yes)
+endif
+
+:Update Issue Record:
+- assigned_to = selected member
+- status = IN_PROGRESS (optional)
+- updated_at = now;
+
+:Create Issue History Entry:
+"Assigned to [Member Name] by [HOD Name]";
+
+:Create Audit Log Entry:
+- action = ASSIGN
+- old_value = null
+- new_value = member ID;
+
+|#FFF3E0|Notification Service|
+fork
+  :Create In-App Notification for Assigned Member;
+fork again
+  :Send Email to Assigned Member:
+  "Issue ISS-XXXX-YYYY assigned to you";
+end fork
+
+|System|
+:Return Success Response;
+
+|HOD (Head of Department)|
+:Display Success Message:
+"Issue assigned successfully";
+
+|#FCE4EC|Assigned Member|
+:Receive Email Notification;
+
+:Receive In-App Notification;
+
+:Login to DQIMS;
+
+:View "My Issues" Dashboard;
+
+:See Newly Assigned Issue;
+
+:Start Working on Issue;
+
+stop
+
+legend right
+  <b>Activity Diagram Legend:</b>
+  
+  <b>Actors:</b>
+  <back:#E8F5E9>  </back> Reporter (HOD/Secretary)
+  <back:#E3F2FD>  </back> System
+  <back:#FFF3E0>  </back> Notification Service
+  <back:#FCE4EC>  </back> Assigned Member
+  
+  <b>Key Points:</b>
+  • Auto-generates issue number
+  • Calculates SLA based on severity
+  • Creates audit trail
+  • Sends notifications
+  • Role-based assignment
+endlegend
+
+@enduml

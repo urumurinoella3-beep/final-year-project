@@ -1,0 +1,248 @@
+@startuml DQIMS_Class_Diagram_A4_Landscape
+!theme plain
+skinparam linetype ortho
+skinparam nodesep 30
+skinparam ranksep 35
+left to right direction
+
+' Optimized for A4 Landscape printing
+skinparam dpi 300
+skinparam defaultFontSize 8
+skinparam classAttributeIconSize 0
+
+skinparam class {
+    BackgroundColor<<core>> #E8F5E9
+    BackgroundColor<<validation>> #E3F2FD
+    BackgroundColor<<analysis>> #FFF3E0
+    BackgroundColor<<system>> #FCE4EC
+    BackgroundColor<<integration>> #F3E5F5
+    BorderColor #20603D
+    BorderThickness 1
+    ArrowColor #20603D
+}
+
+title <size:14><b>DQIMS - Complete Class Diagram (20 Entity Classes)</b></size>\n<size:10>Data Quality Issues Management System - Rwanda Revenue Authority</size>
+
+' ===== COLUMN 1: CORE DOMAIN =====
+
+together {
+    class Department <<core>> {
+        id: UUID
+        deptCode: String
+        deptName: String
+        isActive: Boolean
+    }
+    
+    class User <<core>> {
+        id: UUID
+        employeeId: String
+        email: String
+        passwordHash: String
+        fullName: String
+        role: String
+    }
+    
+    class IssueCategory <<core>> {
+        id: UUID
+        categoryCode: String
+        categoryName: String
+        severityLevel: String
+    }
+}
+
+together {
+    class Issue <<core>> {
+        id: UUID
+        issueNumber: String
+        title: String
+        severity: String
+        priority: String
+        status: String
+        slaDueDate: DateTime
+        slaStatus: String
+    }
+    
+    class IssueComment <<core>> {
+        id: UUID
+        commentText: String
+        isInternal: Boolean
+    }
+    
+    class RelatedIssue <<core>> {
+        id: UUID
+        relationshipType: String
+    }
+    
+    class IssueHistory <<core>> {
+        id: UUID
+        fieldName: String
+        oldValue: String
+        newValue: String
+    }
+}
+
+' ===== COLUMN 2: VALIDATION & ANALYSIS =====
+
+together {
+    class DataValidationRule <<validation>> {
+        id: UUID
+        ruleCode: String
+        ruleName: String
+        validationType: String
+        severity: String
+    }
+    
+    class DataValidationExecution <<validation>> {
+        id: UUID
+        executionNumber: String
+        totalRecordsChecked: Integer
+        recordsPassed: Integer
+        recordsFailed: Integer
+        passRate: Double
+    }
+    
+    class DataValidationFailure <<validation>> {
+        id: UUID
+        recordIdentifier: String
+        actualValue: String
+        failureReason: String
+    }
+}
+
+together {
+    class RootCauseAnalysis <<analysis>> {
+        id: UUID
+        analysisMethod: String
+        rootCause: String
+        correctiveActions: String
+        status: String
+    }
+    
+    class Report <<analysis>> {
+        id: UUID
+        reportNumber: String
+        reportName: String
+        reportType: String
+        fileFormat: String
+    }
+    
+    class DashboardMetric <<analysis>> {
+        id: UUID
+        metricDate: Date
+        totalIssues: Integer
+        openIssues: Integer
+        slaOnTrack: Integer
+    }
+}
+
+' ===== COLUMN 3: SYSTEM & INTEGRATION =====
+
+together {
+    class AuditLog <<system>> {
+        id: UUID
+        actionType: String
+        moduleName: String
+        actionDescription: String
+        ipAddress: String
+    }
+    
+    class Notification <<system>> {
+        id: UUID
+        notificationType: String
+        title: String
+        message: String
+        isRead: Boolean
+    }
+    
+    class SLAConfiguration <<system>> {
+        id: UUID
+        severity: String
+        responseTimeHours: Integer
+        resolutionTimeHours: Integer
+    }
+    
+    class SystemSetting <<system>> {
+        id: UUID
+        settingKey: String
+        settingValue: String
+    }
+}
+
+together {
+    class Integration <<integration>> {
+        id: UUID
+        integrationName: String
+        integrationType: String
+        status: String
+    }
+    
+    class IntegrationLog <<integration>> {
+        id: UUID
+        syncStatus: String
+        recordsProcessed: Integer
+    }
+    
+    class Attachment <<integration>> {
+        id: UUID
+        fileName: String
+        fileSize: Integer
+    }
+}
+
+' ===== RELATIONSHIPS =====
+
+Department "1" -down- "*" User
+Department "1" -down- "*" Issue
+User "1" -down- "*" Issue : reports
+User "1" -down- "*" IssueComment
+IssueCategory "1" -down- "*" Issue
+Issue "1" -right- "*" IssueComment
+Issue "1" -right- "*" RelatedIssue
+Issue "1" -right- "*" IssueHistory
+Issue "1" -right- "1" RootCauseAnalysis
+
+DataValidationRule "1" -down- "*" DataValidationExecution
+DataValidationExecution "1" -down- "*" DataValidationFailure
+DataValidationFailure "*" -right- "1" Issue : creates
+
+User "1" -down- "*" Notification
+User "1" -down- "*" AuditLog
+Department "1" -down- "*" DashboardMetric
+User "1" -down- "*" Report
+SLAConfiguration "1" -down- "*" Issue
+
+Integration "1" -down- "*" IntegrationLog
+Issue "1" -down- "*" Attachment
+
+' ===== NOTES =====
+
+note top of Department
+  <b>Core Domain</b>
+  7 classes
+end note
+
+note top of DataValidationRule
+  <b>Validation</b>
+  3 classes
+end note
+
+note top of AuditLog
+  <b>System</b>
+  4 classes
+end note
+
+note bottom of Issue
+  <b>Main Entity</b>
+  Tracks lifecycle
+end note
+
+legend bottom right
+  <b>20 Entity Classes</b>
+  <back:#E8F5E9>  </back> Core (7)
+  <back:#E3F2FD>  </back> Validation (3)
+  <back:#FFF3E0>  </back> Analysis (3)
+  <back:#FCE4EC>  </back> System (4)
+  <back:#F3E5F5>  </back> Integration (3)
+end legend
+
+@enduml

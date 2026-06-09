@@ -1,0 +1,132 @@
+@startuml DQIMS_System_Architecture_Simple
+!theme plain
+
+title Data Quality Issues Management System (DQIMS)\nSystem Architecture Design - Simplified View
+
+' Users
+rectangle "Users" #E3F2FD {
+    actor "Admin" as Admin
+    actor "HOD" as HOD  
+    actor "Staff" as Staff
+    
+    note bottom
+      <b>User Roles:</b>
+      • Admin: System oversight
+      • HOD: Department management
+      • Staff: Issue resolution
+    end note
+}
+
+' Frontend Layer
+rectangle "Frontend" #E8F5E9 {
+    component "React Frontend\nWhat Users See & Interact With" as Frontend #4CAF50 {
+        [Login]
+        [Issue Management]
+        [User Management]
+        [Data Validation]
+        [Reporting & Analytics]
+        [Notifications]
+        
+        note bottom
+          <b>Technologies:</b>
+          HTML, CSS, JavaScript
+          React, TypeScript, Tailwind
+        end note
+    }
+}
+
+' Backend Layer
+rectangle "Backend" #FFF3E0 {
+    component "Web Server" as WebServer #FF9800 {
+        component "Spring Boot Backend\nContains App Logic" as SpringBoot {
+            [Spring Security]
+            [User Authentication]
+            [Role-Based Access Control]
+            [REST API Controllers]
+        }
+        
+        note bottom
+          Java, Spring Boot Framework
+        end note
+    }
+    
+    component "Business Services" as Services #FFB74D {
+        component "Core Services" as CoreServices {
+            [User Management]
+            [Issue Management]
+            [Department Management]
+            [Notification Service]
+            [Email Service]
+            [Validation Service]
+            [Report Generation]
+        }
+    }
+    
+    component "Database" as DBLayer #FFA726 {
+        component "MySQL Database" as MySQL {
+            [users]
+            [departments]
+            [issues]
+            [issue_comments]
+            [issue_attachments]
+            [notifications]
+            [audit_logs]
+            [password_history]
+            [validation_sessions]
+            [validation_errors]
+        }
+    }
+}
+
+' External Systems
+rectangle "External Systems" #F3E5F5 {
+    component "External Services" as External #CE93D8 {
+        [Gmail SMTP Server]
+        [File Storage System]
+    }
+}
+
+' Connections
+Admin -down-> Frontend : Display Results /\nLogin/Access System
+HOD -down-> Frontend : Display Results /\nLogin/Access System
+Staff -down-> Frontend : Display Results /\nLogin/Access System
+
+Frontend -down-> WebServer : HTTP Requests
+WebServer -down-> Services : JSON Responses
+Services -down-> DBLayer
+
+Services -right-> External : Email Service Provider\nFile Storage
+
+' Communication Notes
+note right of Frontend
+  <b>Port:</b> 5173/5174 (dev)
+  <b>Protocol:</b> HTTPS
+  <b>Format:</b> JSON
+end note
+
+note right of WebServer
+  <b>Port:</b> 8080
+  <b>Protocol:</b> HTTP/REST
+  <b>Auth:</b> JWT Token
+end note
+
+note right of MySQL
+  <b>Port:</b> 3306
+  <b>Protocol:</b> JDBC
+  <b>Type:</b> MySQL 8.0
+end note
+
+' System Flow
+note bottom
+  <b>System Operation Flow:</b>
+  1. Users access system via web browser
+  2. Frontend sends HTTP requests to backend
+  3. Backend validates JWT token and user role
+  4. Business services process requests
+  5. Database stores/retrieves data
+  6. Email service sends notifications
+  7. System returns JSON responses
+  8. Frontend displays results to users
+end note
+
+@enduml

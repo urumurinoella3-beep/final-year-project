@@ -1,0 +1,193 @@
+@startuml DQIMS-Complete-UseCase
+!theme cerulean-outline
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+title Data Quality Issues Management System (DQIMS)\nComplete Use Case Diagram
+
+' Define Actors
+actor "Staff Member\n(Reporter)" as Staff #lightblue
+actor "HOD\n(Head of Department)" as HOD #lightgreen
+actor "System Admin" as Admin #orange
+actor "Data Validator" as Validator #pink
+
+' System boundary
+package "DQIMS Platform" {
+    
+    ' ===== AUTHENTICATION & PROFILE =====
+    package "Account Management" #f0f0f0 {
+        usecase (UC01: Register Account) as UC01
+        usecase (UC02: Login to System) as UC02
+        usecase (UC03: Update Profile) as UC03
+        usecase (UC04: Change Password) as UC04
+        usecase (UC05: Logout) as UC05
+    }
+    
+    ' ===== ISSUE MANAGEMENT =====
+    package "Issue Management" #e8f5e9 {
+        usecase (UC06: Report Issue) as UC06
+        usecase (UC07: View Issues) as UC07
+        usecase (UC08: Update Issue) as UC08
+        usecase (UC09: Assign Issue) as UC09
+        usecase (UC10: Close Issue) as UC10
+        usecase (UC11: Add Comment) as UC11
+        usecase (UC12: Track Issue Status) as UC12
+    }
+    
+    ' ===== DATA VALIDATION =====
+    package "Data Validation" #fff3e0 {
+        usecase (UC13: Upload Data File) as UC13
+        usecase (UC14: Validate Data) as UC14
+        usecase (UC15: View Validation\nResults) as UC15
+        usecase (UC16: Export Errors) as UC16
+        usecase (UC17: View Validation\nHistory) as UC17
+    }
+    
+    ' ===== REPORTING & ANALYTICS =====
+    package "Reports & Analytics" #e3f2fd {
+        usecase (UC18: Generate PDF Report) as UC18
+        usecase (UC19: Generate Excel Report) as UC19
+        usecase (UC20: View Dashboard) as UC20
+        usecase (UC21: Filter by Date/Time) as UC21
+        usecase (UC22: View Statistics) as UC22
+        usecase (UC23: View Audit Logs) as UC23
+    }
+    
+    ' ===== DEPARTMENT MANAGEMENT =====
+    package "Department Management" #fce4ec {
+        usecase (UC24: Manage Departments) as UC24
+        usecase (UC25: View Staff Directory) as UC25
+        usecase (UC26: Assign Staff to Issue) as UC26
+        usecase (UC27: View Department Stats) as UC27
+    }
+    
+    ' ===== USER MANAGEMENT =====
+    package "User Management" #fff8e1 {
+        usecase (UC28: Create User) as UC28
+        usecase (UC29: Update User) as UC29
+        usecase (UC30: Deactivate User) as UC30
+        usecase (UC31: Manage Roles) as UC31
+        usecase (UC32: View User Activity) as UC32
+    }
+    
+    ' ===== NOTIFICATIONS =====
+    package "Notifications" #f3e5f5 {
+        usecase (UC33: Receive Notifications) as UC33
+        usecase (UC34: Mark as Read) as UC34
+        usecase (UC35: View All Notifications) as UC35
+    }
+}
+
+' ===== STAFF CONNECTIONS =====
+Staff --> UC02
+Staff --> UC03
+Staff --> UC04
+Staff --> UC05
+Staff --> UC06
+Staff --> UC07
+Staff --> UC11
+Staff --> UC12
+Staff --> UC13
+Staff --> UC14
+Staff --> UC15
+Staff --> UC16
+Staff --> UC17
+Staff --> UC20
+Staff --> UC33
+Staff --> UC34
+Staff --> UC35
+
+' ===== HOD CONNECTIONS =====
+HOD --> UC02
+HOD --> UC03
+HOD --> UC04
+HOD --> UC05
+HOD --> UC07
+HOD --> UC08
+HOD --> UC09
+HOD --> UC10
+HOD --> UC11
+HOD --> UC18
+HOD --> UC19
+HOD --> UC20
+HOD --> UC21
+HOD --> UC22
+HOD --> UC23
+HOD --> UC25
+HOD --> UC26
+HOD --> UC27
+HOD --> UC33
+HOD --> UC34
+HOD --> UC35
+
+' ===== ADMIN CONNECTIONS =====
+Admin --> UC02
+Admin --> UC03
+Admin --> UC05
+Admin --> UC07
+Admin --> UC18
+Admin --> UC19
+Admin --> UC20
+Admin --> UC21
+Admin --> UC22
+Admin --> UC23
+Admin --> UC24
+Admin --> UC28
+Admin --> UC29
+Admin --> UC30
+Admin --> UC31
+Admin --> UC32
+
+' ===== VALIDATOR CONNECTIONS =====
+Validator --> UC02
+Validator --> UC13
+Validator --> UC14
+Validator --> UC15
+Validator --> UC16
+Validator --> UC17
+
+' ===== RELATIONSHIPS =====
+UC06 ..> UC11 : <<include>>
+UC08 ..> UC11 : <<include>>
+UC09 ..> UC33 : <<include>>
+UC10 ..> UC23 : <<include>>
+UC18 ..> UC21 : <<extend>>
+UC19 ..> UC21 : <<extend>>
+UC13 ..> UC14 : <<include>>
+UC14 ..> UC15 : <<include>>
+
+' ===== NOTES =====
+note right of Staff
+  **Primary Role:**
+  - Report data quality issues
+  - Upload files for validation
+  - Track issue progress
+  - View personal dashboard
+end note
+
+note right of HOD
+  **Primary Role:**
+  - Manage department issues
+  - Assign work to staff
+  - Generate reports
+  - Monitor department performance
+end note
+
+note right of Admin
+  **Primary Role:**
+  - System-wide management
+  - User administration
+  - Access all features
+  - View analytics
+end note
+
+note bottom of "DQIMS Platform"
+  **System Flow:**
+  Staff Reports Issue → HOD Assigns → Staff Resolves → HOD Closes → System Audits
+  
+  **Data Validation Flow:**
+  Upload File → Validate → Review Errors → Export Results → Track History
+end note
+
+@enduml

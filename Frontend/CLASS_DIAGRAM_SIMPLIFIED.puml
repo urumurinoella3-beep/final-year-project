@@ -1,0 +1,348 @@
+@startuml DQIMS_Simplified_Class_Diagram
+!theme plain
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FFFFFF
+skinparam packageStyle rectangle
+
+skinparam class {
+    BackgroundColor<<core>> #E8F5E9
+    BackgroundColor<<validation>> #E3F2FD
+    BackgroundColor<<analysis>> #FFF3E0
+    BackgroundColor<<system>> #FCE4EC
+    BorderColor #20603D
+    ArrowColor #00A1DE
+    FontSize 12
+    FontName Arial
+}
+
+title DQIMS - Simplified Class Diagram\nRwanda Revenue Authority\n
+
+' ===================================================================
+' CORE ENTITIES - SIMPLIFIED
+' ===================================================================
+
+class Department <<core>> {
+    - id: UUID
+    - deptCode: String
+    - deptName: String
+    - isActive: Boolean
+    __
+    + activate()
+    + deactivate()
+}
+
+class User <<core>> {
+    - id: UUID
+    - employeeId: String
+    - email: String
+    - passwordHash: String
+    - fullName: String
+    - role: String
+    - phone: String
+    __
+    + login()
+    + changePassword()
+    + hasRole()
+}
+
+class IssueCategory <<core>> {
+    - id: UUID
+    - categoryCode: String
+    - categoryName: String
+    - severityLevel: String
+    - colorCode: String
+    __
+    + getName()
+}
+
+class Issue <<core>> {
+    - id: UUID
+    - issueNumber: String
+    - title: String
+    - description: String
+    - severity: String
+    - priority: String
+    - status: String
+    - slaDueDate: DateTime
+    - slaStatus: String
+    __
+    + assign()
+    + resolve()
+    + updateStatus()
+    + calculateSLA()
+}
+
+class IssueComment <<core>> {
+    - id: UUID
+    - commentText: String
+    - isInternal: Boolean
+    __
+    + edit()
+    + delete()
+}
+
+class RelatedIssue <<core>> {
+    - id: UUID
+    - relationshipType: String
+    - notes: String
+    __
+    + isDuplicate()
+}
+
+class IssueHistory <<core>> {
+    - id: UUID
+    - changeType: String
+    - fieldName: String
+    - oldValue: String
+    - newValue: String
+    __
+    + getDescription()
+}
+
+' ===================================================================
+' DATA VALIDATION - SIMPLIFIED
+' ===================================================================
+
+class DataValidationRule <<validation>> {
+    - id: UUID
+    - ruleCode: String
+    - ruleName: String
+    - validationType: String
+    - ruleLogic: String
+    - severity: String
+    __
+    + execute()
+    + validate()
+}
+
+class DataValidationExecution <<validation>> {
+    - id: UUID
+    - executionNumber: String
+    - executionStatus: String
+    - totalRecordsChecked: Integer
+    - recordsPassed: Integer
+    - recordsFailed: Integer
+    - passRate: Double
+    __
+    + start()
+    + complete()
+    + calculatePassRate()
+}
+
+class DataValidationFailure <<validation>> {
+    - id: UUID
+    - recordIdentifier: String
+    - actualValue: String
+    - expectedValue: String
+    - failureReason: String
+    __
+    + createIssue()
+}
+
+' ===================================================================
+' ANALYSIS - SIMPLIFIED
+' ===================================================================
+
+class RootCauseAnalysis <<analysis>> {
+    - id: UUID
+    - analysisMethod: String
+    - why1, why2, why3, why4, why5: String
+    - rootCause: String
+    - correctiveActions: String
+    - preventiveActions: String
+    - status: String
+    __
+    + submitForReview()
+    + approve()
+}
+
+class Report <<analysis>> {
+    - id: UUID
+    - reportNumber: String
+    - reportName: String
+    - reportType: String
+    - reportData: JSON
+    - fileFormat: String
+    __
+    + generate()
+    + exportToPDF()
+    + exportToExcel()
+}
+
+class DashboardMetric <<analysis>> {
+    - id: UUID
+    - metricDate: Date
+    - totalIssues: Integer
+    - openIssues: Integer
+    - slaOnTrack: Integer
+    - validationPassRate: Double
+    __
+    + calculate()
+}
+
+' ===================================================================
+' SYSTEM & COMPLIANCE - SIMPLIFIED
+' ===================================================================
+
+class AuditLog <<system>> {
+    - id: UUID
+    - actionType: String
+    - moduleName: String
+    - actionDescription: String
+    - ipAddress: String
+    __
+    + log()
+}
+
+class Notification <<system>> {
+    - id: UUID
+    - notificationType: String
+    - title: String
+    - message: String
+    - isRead: Boolean
+    __
+    + markAsRead()
+    + send()
+}
+
+class SLAConfiguration <<system>> {
+    - id: UUID
+    - slaName: String
+    - severity: String
+    - responseTimeHours: Integer
+    - resolutionTimeHours: Integer
+    __
+    + calculateDueDate()
+    + isBreached()
+}
+
+class SystemSetting <<system>> {
+    - id: UUID
+    - settingKey: String
+    - settingValue: String
+    - category: String
+    __
+    + getValue()
+    + setValue()
+}
+
+class Integration <<system>> {
+    - id: UUID
+    - integrationName: String
+    - integrationType: String
+    - status: String
+    __
+    + sync()
+    + test()
+}
+
+class IntegrationLog <<system>> {
+    - id: UUID
+    - syncStatus: String
+    - recordsProcessed: Integer
+    - recordsSuccess: Integer
+    __
+    + getSuccessRate()
+}
+
+class Attachment <<system>> {
+    - id: UUID
+    - fileName: String
+    - fileSize: Integer
+    - filePath: String
+    __
+    + download()
+    + delete()
+}
+
+' ===================================================================
+' RELATIONSHIPS
+' ===================================================================
+
+' Core Relationships
+Department "1" -- "many" User
+Department "1" -- "many" Issue
+User "1" -- "many" Issue : reports
+User "1" -- "many" Issue : assigned
+IssueCategory "1" -- "many" Issue
+Issue "1" -- "many" IssueComment
+Issue "1" -- "many" RelatedIssue
+Issue "1" -- "many" IssueHistory
+Issue "1" -- "1" RootCauseAnalysis
+
+' Validation Relationships
+DataValidationRule "1" -- "many" DataValidationExecution
+DataValidationExecution "1" -- "many" DataValidationFailure
+DataValidationFailure "many" -- "1" Issue : creates
+
+' System Relationships
+User "1" -- "many" Notification
+User "1" -- "many" AuditLog
+Department "1" -- "many" DashboardMetric
+User "1" -- "many" Report
+Integration "1" -- "many" IntegrationLog
+
+' SLA Relationship
+SLAConfiguration "1" -- "many" Issue : defines deadlines
+
+' Attachments (can attach to multiple entities)
+Issue "1" -- "many" Attachment
+IssueComment "1" -- "many" Attachment
+
+' ===================================================================
+' NOTES
+' ===================================================================
+
+note top of Department
+  <b>RRA Departments</b>
+  IT, Domestic Tax, Customs,
+  HR, Finance, Audit, etc.
+end note
+
+note top of User
+  <b>Roles:</b>
+  • ADMIN - Full access
+  • HOD - Department head
+  • Secretary - Data entry
+  • Member - Assigned issues
+end note
+
+note right of Issue
+  <b>Main Entity</b>
+  Tracks data quality issues
+  from creation to resolution
+  
+  <b>Statuses:</b>
+  Open → In Progress → 
+  Resolved → Closed
+end note
+
+note bottom of DataValidationRule
+  <b>Automated Quality Checks</b>
+  • Format validation
+  • Range checks
+  • Uniqueness
+  • Completeness
+end note
+
+note bottom of AuditLog
+  <b>Compliance</b>
+  Immutable record of
+  all system actions
+end note
+
+legend right
+  |= <b>Color Code</b> |= <b>Package</b> |
+  | <back:#E8F5E9>   </back> | Core Domain |
+  | <back:#E3F2FD>   </back> | Data Validation |
+  | <back:#FFF3E0>   </back> | Analysis & Reporting |
+  | <back:#FCE4EC>   </back> | System & Compliance |
+  
+  <b>RRA Brand Colors:</b>
+  Green: #20603D (Primary)
+  Blue: #00A1DE (Secondary)
+  Orange: #E5BE01 (Accent)
+endlegend
+
+@enduml

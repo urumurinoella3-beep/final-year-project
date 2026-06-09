@@ -1,0 +1,215 @@
+@startuml DQIMS-Professional-UseCase
+!theme plain
+skinparam actorStyle stick
+skinparam packageStyle rectangle
+skinparam usecase {
+    BackgroundColor White
+    BorderColor #20603D
+    ArrowColor Black
+}
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #20603D
+    FontStyle bold
+}
+
+title Data Quality Issues Management System (DQIMS)\nUse Case Diagram
+
+' ===== LEFT SIDE: ACTORS =====
+actor "Staff Member\n(User)" as Staff #lightblue
+actor "HOD\n(Manager)" as HOD #lightgreen  
+actor "System\nAdministrator" as Admin #orange
+
+' ===== MAIN SYSTEM BOUNDARY =====
+rectangle "DQIMS Platform" #white {
+    
+    ' ===== PACKAGE 1: ACCOUNT MANAGEMENT =====
+    package "Account Management" #FFE6E6 {
+        usecase "Register" as Register
+        usecase "Login" as Login
+        usecase "Update Profile" as UpdateProfile
+        usecase "Change Password" as ChangePassword
+    }
+    
+    ' ===== PACKAGE 2: ISSUE MANAGEMENT =====
+    package "Issue Management" #E6F3FF {
+        usecase "Report Issue" as ReportIssue
+        usecase "View Issues" as ViewIssues
+        usecase "Update Issue\nStatus" as UpdateIssue
+        usecase "Assign to Staff" as AssignIssue
+        usecase "Add Comments" as AddComment
+        usecase "Close Issue" as CloseIssue
+    }
+    
+    ' ===== PACKAGE 3: DATA VALIDATION =====
+    package "Data Validation" #FFF9E6 {
+        usecase "Upload CSV/Excel\nFile" as UploadFile
+        usecase "Validate Data\nQuality" as ValidateData
+        usecase "View Validation\nResults" as ViewResults
+        usecase "Export Error\nReport" as ExportErrors
+    }
+    
+    ' ===== PACKAGE 4: REPORTS & ANALYTICS =====
+    package "Reports & Analytics" #E6FFE6 {
+        usecase "View Dashboard" as ViewDashboard
+        usecase "Generate PDF\nReport" as GeneratePDF
+        usecase "Generate Excel\nReport" as GenerateExcel
+        usecase "Filter by\nDate/Time" as FilterDateTime
+        usecase "View Statistics" as ViewStats
+        usecase "View Audit Logs" as ViewAudit
+    }
+    
+    ' ===== PACKAGE 5: DEPARTMENT MANAGEMENT =====
+    package "Department Management" #F0E6FF {
+        usecase "Manage\nDepartments" as ManageDept
+        usecase "View Staff\nDirectory" as ViewStaff
+        usecase "View Department\nIssues" as ViewDeptIssues
+    }
+    
+    ' ===== PACKAGE 6: USER ADMINISTRATION =====
+    package "User Administration" #FFE6F5 {
+        usecase "Create User" as CreateUser
+        usecase "Manage User\nAccounts" as ManageUsers
+        usecase "Assign Roles" as AssignRoles
+        usecase "View Analytics" as ViewAnalytics
+    }
+    
+    ' ===== PACKAGE 7: NOTIFICATIONS =====
+    package "Notifications" #E6FFFA {
+        usecase "Receive\nNotifications" as ReceiveNotif
+        usecase "Mark as Read" as MarkRead
+        usecase "View All\nNotifications" as ViewNotif
+    }
+}
+
+' ===== STAFF CONNECTIONS =====
+Staff --> Register
+Staff --> Login
+Staff --> UpdateProfile
+Staff --> ChangePassword
+Staff --> ReportIssue
+Staff --> ViewIssues
+Staff --> AddComment
+Staff --> UploadFile
+Staff --> ValidateData
+Staff --> ViewResults
+Staff --> ExportErrors
+Staff --> ViewDashboard
+Staff --> ReceiveNotif
+Staff --> MarkRead
+Staff --> ViewNotif
+
+' ===== HOD CONNECTIONS =====
+HOD --> Login
+HOD --> UpdateProfile
+HOD --> ChangePassword
+HOD --> ViewIssues
+HOD --> UpdateIssue
+HOD --> AssignIssue
+HOD --> AddComment
+HOD --> CloseIssue
+HOD --> ViewDashboard
+HOD --> GeneratePDF
+HOD --> GenerateExcel
+HOD --> FilterDateTime
+HOD --> ViewStats
+HOD --> ViewAudit
+HOD --> ViewStaff
+HOD --> ViewDeptIssues
+HOD --> ReceiveNotif
+HOD --> MarkRead
+
+' ===== ADMIN CONNECTIONS =====
+Admin --> Login
+Admin --> ManageDept
+Admin --> CreateUser
+Admin --> ManageUsers
+Admin --> AssignRoles
+Admin --> ViewAnalytics
+Admin --> GeneratePDF
+Admin --> GenerateExcel
+Admin --> ViewAudit
+Admin --> ViewIssues
+
+' ===== RELATIONSHIPS & DEPENDENCIES =====
+ReportIssue ..> ReceiveNotif : <<triggers>>
+AssignIssue ..> ReceiveNotif : <<triggers>>
+UpdateIssue ..> ReceiveNotif : <<triggers>>
+CloseIssue ..> ViewAudit : <<logs>>
+UploadFile ..> ValidateData : <<requires>>
+ValidateData ..> ViewResults : <<produces>>
+GeneratePDF ..> FilterDateTime : <<uses>>
+GenerateExcel ..> FilterDateTime : <<uses>>
+
+' ===== INFORMATION BOX: WHAT USERS CAN DO =====
+note left of Staff
+  **Staff Member Can:**
+  
+  1. Create account & login
+  2. Report data quality issues
+  3. Upload files for validation
+  4. View validation results
+  5. Track their issues
+  6. Add comments to issues
+  7. View dashboard statistics
+  8. Receive notifications
+  9. Export error reports
+end note
+
+note left of HOD
+  **HOD (Manager) Can:**
+  
+  1. View all department issues
+  2. Assign issues to staff
+  3. Update issue status
+  4. Close resolved issues
+  5. Generate PDF/Excel reports
+  6. Filter reports by date/time
+  7. View staff directory
+  8. Monitor department stats
+  9. View audit trail
+  10. Manage team workload
+end note
+
+note right of Admin
+  **Administrator Can:**
+  
+  1. All user capabilities
+  2. Manage user accounts
+  3. Create new users
+  4. Assign user roles
+  5. Manage departments
+  6. View platform analytics
+  7. Monitor all activities
+  8. Access audit logs
+end note
+
+' ===== BOTTOM FLOW EXPLANATION =====
+note bottom of "DQIMS Platform"
+  **DQIMS Platform Flow:**
+  
+  **Issue Lifecycle:** Staff Reports → HOD Assigns → Staff Resolves → HOD Reviews → Close → Audit Log
+  
+  **Data Validation:** Upload File → System Validates → View Errors → Export Results → Track History
+  
+  **Reporting:** Select Filters (Date/Time, Department) → Generate Report → Download PDF/Excel
+  
+  **Key Features:** Real-time notifications, Audit trail, Role-based access, Custom date/time filtering
+end note
+
+' ===== LEGEND =====
+legend right
+  |= Symbol |= Meaning |
+  | ──> | User interacts with use case |
+  | ···> | System dependency/trigger |
+  | <<requires>> | Must be done first |
+  | <<triggers>> | Automatically initiates |
+  | <<uses>> | Utilizes feature |
+  | <<logs>> | Records activity |
+  |= Color |= Actor Role |
+  | <#lightblue> | Staff Member |
+  | <#lightgreen> | Head of Department |
+  | <#orange> | System Administrator |
+endlegend
+
+@enduml

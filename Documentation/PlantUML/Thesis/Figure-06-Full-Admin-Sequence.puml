@@ -1,0 +1,85 @@
+@startuml
+title Figure 6: Full System Administrator Sequence Diagram
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 10
+skinparam dpi 150
+skinparam sequenceMessageAlign center
+
+actor "System\nAdministrator" as Admin
+participant "Frontend" as UI
+participant "Backend\nAPI" as API
+participant "Auth\nService" as Auth
+participant "User\nService" as UserSvc
+participant "Department\nService" as DeptSvc
+participant "Report\nService" as ReportSvc
+database "Database" as DB
+participant "Email\nService" as Email
+
+== Authentication ==
+Admin -> UI: Enter Credentials
+UI -> API: POST /api/auth/login
+API -> Auth: validateCredentials()
+Auth -> DB: findByEmail()
+DB --> Auth: User (role=ADMIN)
+Auth -> Auth: verifyPassword(BCrypt)
+Auth -> Auth: generateJWT()
+Auth --> API: JWT Token
+API --> UI: {token, user}
+UI --> Admin: Redirect to Dashboard
+
+== User Management ==
+Admin -> UI: Create User Form
+UI -> API: POST /api/users/create
+API -> UserSvc: createUser(dto)
+UserSvc -> UserSvc: generatePassword()
+UserSvc -> UserSvc: hashPassword()
+UserSvc -> DB: INSERT user
+DB --> UserSvc: User Created
+UserSvc -> Email: sendWelcomeEmail()
+Email --> UserSvc: Email Sent
+UserSvc -> DB: INSERT audit_log
+UserSvc --> API: UserResponse
+API --> UI: Success
+UI --> Admin: User Created
+
+== Department Management ==
+Admin -> UI: Create Department
+UI -> API: POST /api/departments
+API -> DeptSvc: createDepartment(dto)
+DeptSvc -> DB: INSERT department
+DB --> DeptSvc: Department Created
+DeptSvc -> DB: INSERT audit_log
+DeptSvc --> API: DepartmentResponse
+API --> UI: Success
+UI --> Admin: Department Created
+
+== View All Issues ==
+Admin -> UI: View Issues
+UI -> API: GET /api/issues/all
+API -> DB: SELECT * FROM issues
+DB --> API: All Issues
+API --> UI: IssueList[]
+UI --> Admin: Display Issues Table
+
+== Generate Reports ==
+Admin -> UI: Generate Report
+UI -> API: POST /api/reports/generate
+API -> ReportSvc: generateReport(params)
+ReportSvc -> DB: Query Statistics
+DB --> ReportSvc: Aggregated Data
+ReportSvc -> ReportSvc: createCharts()
+ReportSvc -> ReportSvc: formatPDF()
+ReportSvc --> API: Report File
+API --> UI: Download Link
+UI --> Admin: Download Report
+
+== Audit Logs ==
+Admin -> UI: View Audit Logs
+UI -> API: GET /api/audit-logs
+API -> DB: SELECT * FROM audit_logs
+DB --> API: Audit Records
+API --> UI: AuditLog[]
+UI --> Admin: Display Audit Table
+
+@enduml

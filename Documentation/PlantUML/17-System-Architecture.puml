@@ -1,0 +1,339 @@
+@startuml DQIMS_System_Architecture
+!theme plain
+skinparam componentStyle rectangle
+skinparam backgroundColor #FFFFFF
+
+title Data Quality Issues Management System (DQIMS)\nSystem Architecture Design
+
+' External Systems
+package "External Systems" #F5F5F5 {
+    component "Gmail SMTP Server" as SMTP #FFE0B2 {
+        [Email Service Provider]
+        note right
+          smtp.gmail.com:587
+          TLS Enabled
+          urumurinoella3@gmail.com
+        end note
+    }
+    
+    component "File System" as FS #E1F5FE {
+        [File Storage]
+        note right
+          - Issue attachments
+          - Validation files
+          - Report exports
+          - User uploads
+        end note
+    }
+}
+
+' Users
+actor "Admin" as Admin #FFE0B2
+actor "HOD" as HOD #C8E6C9
+actor "Staff" as Staff #FFF9C4
+
+' Presentation Layer
+package "Presentation Layer" #E3F2FD {
+    component "React Frontend" as Frontend #2196F3 {
+        [User Interface Components]
+        
+        package "Pages" {
+            [Login Page]
+            [Dashboard]
+            [Issue Management]
+            [User Management]
+            [Data Validation]
+            [Reporting & Analytics]
+            [Notifications]
+        }
+        
+        package "Components" {
+            [Forms]
+            [Tables]
+            [Charts (Recharts)]
+            [Modals]
+            [Navigation]
+        }
+        
+        package "Services" {
+            [API Client (Axios)]
+            [Auth Service]
+            [State Management]
+        }
+        
+        package "Libraries" {
+            [React Router]
+            [Tailwind CSS]
+            [jsPDF]
+            [xlsx]
+            [docx]
+            [file-saver]
+        }
+        
+        note bottom
+          <b>Technology Stack:</b>
+          • React 18 + TypeScript
+          • Vite Build Tool
+          • Tailwind CSS
+          • Recharts for visualization
+        end note
+    }
+}
+
+' Application Layer
+package "Application Layer" #E8F5E9 {
+    component "Spring Boot Backend" as Backend #4CAF50 {
+        
+        package "Security Layer" {
+            [JWT Authentication Filter]
+            [Spring Security Config]
+            [CORS Configuration]
+            [Role-Based Authorization]
+        }
+        
+        package "REST API Controllers" {
+            [AuthController]
+            [UserController]
+            [IssueController]
+            [DepartmentController]
+            [NotificationController]
+            [ReportController]
+            [AuditLogController]
+        }
+        
+        package "Business Services" {
+            [AuthService]
+            [UserService]
+            [IssueService]
+            [DepartmentService]
+            [NotificationService]
+            [EmailService]
+            [ValidationService]
+            [ReportService]
+            [AuditLogService]
+        }
+        
+        package "Data Access Layer" {
+            [UserRepository]
+            [IssueRepository]
+            [DepartmentRepository]
+            [NotificationRepository]
+            [AuditLogRepository]
+            [IssueCommentRepository]
+            [IssueAttachmentRepository]
+            [ValidationSessionRepository]
+        }
+        
+        note bottom
+          <b>Technology Stack:</b>
+          • Java 17
+          • Spring Boot 3.x
+          • Spring Security 6.x
+          • Spring Data JPA
+          • Hibernate ORM
+          • JWT (io.jsonwebtoken)
+          • JavaMail API
+          • Lombok
+          • Maven
+        end note
+    }
+}
+
+' Data Layer
+package "Data Layer" #FFF3E0 {
+    database "MySQL Database" as DB #FF9800 {
+        component "dqims_db" {
+            [users]
+            [departments]
+            [issues]
+            [issue_comments]
+            [issue_attachments]
+            [notifications]
+            [audit_logs]
+            [password_history]
+            [validation_sessions]
+            [validation_errors]
+        }
+        
+        note bottom
+          <b>Database:</b>
+          • MySQL 8.0
+          • UTF-8 encoding
+          • 10 tables
+          • Foreign key constraints
+          • Optimized indexes
+        end note
+    }
+}
+
+' Connections - Users to Frontend
+Admin -down-> Frontend : HTTPS
+HOD -down-> Frontend : HTTPS
+Staff -down-> Frontend : HTTPS
+
+' Connections - Frontend to Backend
+Frontend -down-> Backend : HTTP/REST API\nJSON Requests\nJWT Token in Header
+
+note on link
+  <b>API Endpoints:</b>
+  • POST /api/auth/login
+  • POST /api/auth/forgot-password
+  • GET /api/users
+  • POST /api/users
+  • GET /api/issues
+  • POST /api/issues
+  • PUT /api/issues/{id}
+  • GET /api/notifications
+  • GET /api/reports
+  • GET /api/audit-logs
+end note
+
+' Connections - Backend to Database
+Backend -down-> DB : JDBC\nHibernate ORM\nSQL Queries
+
+' Connections - Backend to External Systems
+Backend -right-> SMTP : SMTP Protocol\nSend Emails
+Backend -right-> FS : File I/O\nRead/Write Files
+
+' Communication Protocols
+note right of Frontend
+  <b>Frontend Communication:</b>
+  • REST API calls via Axios
+  • JWT token authentication
+  • JSON data format
+  • CORS enabled
+  • Port: 5173/5174 (dev)
+  • Port: 80/443 (prod)
+end note
+
+note right of Backend
+  <b>Backend Communication:</b>
+  • RESTful API endpoints
+  • JWT token validation
+  • Role-based authorization
+  • Exception handling
+  • Audit logging
+  • Port: 8080
+end note
+
+note right of DB
+  <b>Database Communication:</b>
+  • JDBC connection
+  • HikariCP connection pool
+  • Transaction management
+  • Lazy/Eager loading
+  • Port: 3306
+end note
+
+' Security Flow
+package "Security Flow" #FFEBEE {
+    rectangle "Authentication Flow" #FFCDD2 {
+        (1) User enters credentials
+        (2) Frontend sends to /api/auth/login
+        (3) Backend validates credentials
+        (4) Backend generates JWT token
+        (5) Frontend stores token
+        (6) Token sent with each request
+        (7) Backend validates token
+        (8) Access granted/denied
+    }
+}
+
+' Data Flow
+package "Data Flow Example: Report Issue" #E1F5FE {
+    rectangle "Issue Reporting Flow" #B3E5FC {
+        (1) User fills issue form
+        (2) Frontend validates input
+        (3) POST /api/issues with JWT
+        (4) Backend validates token & role
+        (5) IssueService creates issue
+        (6) Save to database
+        (7) EmailService sends notification
+        (8) Return success response
+        (9) Frontend updates UI
+    }
+}
+
+' Deployment Architecture
+package "Deployment Architecture" #F3E5F5 {
+    node "Client Browser" as Browser #CE93D8 {
+        [React Application]
+        [Local Storage (JWT)]
+    }
+    
+    node "Web Server" as WebServer #BA68C8 {
+        [Nginx (Optional)]
+        note right
+          • Reverse proxy
+          • Static file serving
+          • SSL/TLS termination
+        end note
+    }
+    
+    node "Application Server" as AppServer #AB47BC {
+        [Spring Boot JAR]
+        [Embedded Tomcat]
+        note right
+          • Port: 8080
+          • JVM: Java 17
+          • Memory: 2GB+
+        end note
+    }
+    
+    node "Database Server" as DBServer #9C27B0 {
+        [MySQL Server]
+        note right
+          • Port: 3306
+          • Storage: 100GB+
+          • Backup: Daily
+        end note
+    }
+    
+    Browser -down-> WebServer : HTTPS (443)
+    WebServer -down-> AppServer : HTTP (8080)
+    AppServer -down-> DBServer : MySQL (3306)
+}
+
+' System Components Summary
+legend bottom left
+  <b>DQIMS System Architecture Summary</b>
+  
+  <b>Presentation Layer:</b>
+  • React 18 + TypeScript frontend
+  • Responsive UI with Tailwind CSS
+  • Client-side routing and state management
+  • Data visualization with Recharts
+  
+  <b>Application Layer:</b>
+  • Spring Boot 3.x backend
+  • RESTful API architecture
+  • JWT-based authentication
+  • Role-based authorization (ADMIN, HOD, STAFF)
+  • Business logic services
+  • Email notification service
+  
+  <b>Data Layer:</b>
+  • MySQL 8.0 relational database
+  • 10 normalized tables
+  • Foreign key relationships
+  • Optimized indexes for performance
+  
+  <b>Security:</b>
+  • JWT token authentication
+  • BCrypt password hashing
+  • CORS configuration
+  • Role-based access control
+  • Audit logging
+  
+  <b>External Integrations:</b>
+  • Gmail SMTP for email notifications
+  • File system for attachments and reports
+  
+  <b>Communication:</b>
+  • Frontend ↔ Backend: REST API (JSON over HTTPS)
+  • Backend ↔ Database: JDBC (SQL)
+  • Backend ↔ Email: SMTP
+  • Backend ↔ Files: File I/O
+endlegend
+
+@enduml

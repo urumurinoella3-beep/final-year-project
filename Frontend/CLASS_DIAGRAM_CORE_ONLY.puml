@@ -1,0 +1,202 @@
+@startuml DQIMS_Core_Classes_Only
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 14
+skinparam defaultFontName Arial
+
+skinparam class {
+    BackgroundColor #E8F5E9
+    BorderColor #20603D
+    BorderThickness 2
+    ArrowColor #00A1DE
+    ArrowThickness 2
+}
+
+title <size:20><b>DQIMS - Core Class Diagram</b></size>\n<size:14>Data Quality Issues Management System</size>\n<size:12>Rwanda Revenue Authority</size>\n
+
+' ===================================================================
+' CORE CLASSES ONLY - FOR PRESENTATION
+' ===================================================================
+
+class Department {
+    <b>Attributes:</b>
+    - id: UUID
+    - deptCode: String
+    - deptName: String
+    - isActive: Boolean
+    __
+    <b>Methods:</b>
+    + getDepartmentName()
+    + activate()
+    + deactivate()
+}
+
+class User {
+    <b>Attributes:</b>
+    - id: UUID
+    - employeeId: String
+    - email: String
+    - passwordHash: String
+    - fullName: String
+    - role: String
+    - department: Department
+    - phone: String
+    - isActive: Boolean
+    __
+    <b>Methods:</b>
+    + login(password)
+    + changePassword()
+    + hasRole(role)
+    + isAdmin()
+}
+
+class IssueCategory {
+    <b>Attributes:</b>
+    - id: UUID
+    - categoryCode: String
+    - categoryName: String
+    - severityLevel: String
+    - colorCode: String
+    __
+    <b>Methods:</b>
+    + getCategoryName()
+    + getColorCode()
+}
+
+class Issue {
+    <b>Attributes:</b>
+    - id: UUID
+    - issueNumber: String
+    - title: String
+    - description: String
+    - category: IssueCategory
+    - severity: String
+    - priority: String
+    - status: String
+    - reportedBy: User
+    - assignedTo: User
+    - department: Department
+    - slaDueDate: DateTime
+    - slaStatus: String
+    __
+    <b>Methods:</b>
+    + assign(user)
+    + updateStatus(status)
+    + resolve(notes)
+    + calculateSLA()
+    + addComment()
+}
+
+class IssueComment {
+    <b>Attributes:</b>
+    - id: UUID
+    - issue: Issue
+    - user: User
+    - commentText: String
+    - isInternal: Boolean
+    - createdAt: DateTime
+    __
+    <b>Methods:</b>
+    + edit(newText)
+    + delete()
+}
+
+' ===================================================================
+' RELATIONSHIPS
+' ===================================================================
+
+Department "1" -- "0..*" User : <b>has</b> >
+Department "1" -- "0..*" Issue : <b>owns</b> >
+
+User "1" -- "0..*" Issue : <b>reports</b> >
+User "1" -- "0..*" Issue : <b>assigned to</b> >
+User "1" -- "0..*" IssueComment : <b>writes</b> >
+
+IssueCategory "1" -- "0..*" Issue : <b>categorizes</b> >
+
+Issue "1" -- "0..*" IssueComment : <b>has</b> >
+
+' ===================================================================
+' NOTES
+' ===================================================================
+
+note right of Department #FFFFCC
+    <b>RRA Departments:</b>
+    • IT - Information Technology
+    • DT - Domestic Tax
+    • CT - Customs & Tax
+    • HR - Human Resources
+    • FINANCE - Finance & Accounting
+    • AUDIT - Internal Audit
+end note
+
+note left of User #E3F2FD
+    <b>User Roles:</b>
+    
+    <b>ADMIN</b> - Full system access
+    • View all departments
+    • Manage users
+    • System configuration
+    
+    <b>HOD</b> - Head of Department
+    • View department issues
+    • Assign to team members
+    • Approve resolutions
+    
+    <b>SECRETARY</b> - Department Assistant
+    • Create issues
+    • View department data
+    • Update statuses
+    
+    <b>MEMBER</b> - Regular Staff
+    • View assigned issues
+    • Resolve issues
+    • Add comments
+end note
+
+note bottom of Issue #FFF3E0
+    <b>Main Entity - Issue Lifecycle:</b>
+    
+    <b>Statuses:</b>
+    Open → In Progress → Pending → 
+    Resolved → Closed
+    
+    <b>Severity Levels:</b>
+    • Critical (Fix in 24 hours)
+    • High (Fix in 48 hours)
+    • Medium (Fix in 5 days)
+    • Low (Fix in 10 days)
+    
+    <b>SLA Status:</b>
+    • On Track (plenty of time)
+    • At Risk (deadline approaching)
+    • Breached (past deadline)
+end note
+
+' ===================================================================
+' LEGEND
+' ===================================================================
+
+legend bottom left
+    <b><size:14>Relationship Symbols</size></b>
+    
+    |= <b>Symbol</b> |= <b>Meaning</b> |
+    | 1 -- 0..* | One to Many |
+    | -- | Association |
+    | > | Direction |
+    
+    <b><size:14>RRA Brand Colors</size></b>
+    
+    <back:#20603D>    </back> Green: #20603D (Primary)
+    <back:#00A1DE>    </back> Blue: #00A1DE (Secondary)
+    <back:#E5BE01>    </back> Orange: #E5BE01 (Accent)
+    
+    <b><size:14>Key Points</size></b>
+    
+    • 5 Core Classes
+    • 7 Main Relationships
+    • Supports 4 User Roles
+    • Tracks Complete Issue Lifecycle
+endlegend
+
+@enduml

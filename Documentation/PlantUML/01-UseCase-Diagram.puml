@@ -1,0 +1,244 @@
+@startuml DQIMS_UseCase_Diagram
+!theme plain
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+title Data Quality Issues Management System (DQIMS)\nUse Case Diagram
+
+' Define Actors
+actor "System Admin" as Admin #LightBlue
+actor "Head of Department\n(HOD)" as HOD #LightGreen
+actor "Staff Member" as Staff #LightYellow
+actor "Email System" as Email #LightGray
+
+' Secondary Actors
+actor "Database" as DB #WhiteSmoke
+actor "File System" as FS #WhiteSmoke
+
+' System Boundary
+rectangle "DQIMS System" {
+    
+    ' Authentication & User Management
+    package "Authentication & User Management" #DDDDDD {
+        usecase "Login to System" as UC1
+        usecase "Change Password" as UC2
+        usecase "Reset Password" as UC3
+        usecase "Logout" as UC4
+        usecase "Manage User Accounts" as UC5
+        usecase "Create User Account" as UC6
+        usecase "Update User Account" as UC7
+        usecase "Deactivate User Account" as UC8
+        usecase "View User List" as UC9
+    }
+    
+    ' Issue Management
+    package "Issue Management" #E8F5E9 {
+        usecase "Report New Issue" as UC10
+        usecase "View Issues" as UC11
+        usecase "View Issue Details" as UC12
+        usecase "Assign Issue" as UC13
+        usecase "Update Issue Status" as UC14
+        usecase "Change Issue Priority" as UC15
+        usecase "Add Comment to Issue" as UC16
+        usecase "Upload Attachment" as UC17
+        usecase "Download Attachment" as UC18
+        usecase "Close Issue" as UC19
+        usecase "Reopen Issue" as UC20
+        usecase "Mark Issue as Resolved" as UC21
+    }
+    
+    ' Department Management
+    package "Department Management" #FFF3E0 {
+        usecase "Create Department" as UC22
+        usecase "View Departments" as UC23
+        usecase "Update Department" as UC24
+        usecase "Assign HOD to Department" as UC25
+    }
+    
+    ' Data Validation
+    package "Data Validation" #E3F2FD {
+        usecase "Upload Data File" as UC26
+        usecase "Validate Data" as UC27
+        usecase "View Validation Results" as UC28
+        usecase "Export Validation Report" as UC29
+        usecase "Create Issue from Validation" as UC30
+    }
+    
+    ' Reporting & Analytics
+    package "Reporting & Analytics" #F3E5F5 {
+        usecase "Generate Reports" as UC31
+        usecase "View Dashboard" as UC32
+        usecase "Export Report (PDF)" as UC33
+        usecase "Export Report (Excel)" as UC34
+        usecase "Export Report (CSV)" as UC35
+        usecase "Export Report (Word)" as UC36
+        usecase "View Issue Statistics" as UC37
+        usecase "View Department Performance" as UC38
+    }
+    
+    ' Notification Management
+    package "Notification Management" #FCE4EC {
+        usecase "View Notifications" as UC39
+        usecase "Mark Notification as Read" as UC40
+        usecase "Receive Email Notification" as UC41
+        usecase "Send Assignment Notification" as UC42
+    }
+    
+    ' Audit & Logging
+    package "Audit & Logging" #EFEBE9 {
+        usecase "View Audit Logs" as UC43
+        usecase "Track User Activities" as UC44
+        usecase "Generate Audit Report" as UC45
+    }
+}
+
+' Admin Relationships (Primary Actor)
+Admin --> UC1
+Admin --> UC2
+Admin --> UC4
+Admin --> UC5
+Admin --> UC6
+Admin --> UC7
+Admin --> UC8
+Admin --> UC9
+Admin --> UC11
+Admin --> UC12
+Admin --> UC16
+Admin --> UC17
+Admin --> UC18
+Admin --> UC22
+Admin --> UC23
+Admin --> UC24
+Admin --> UC25
+Admin --> UC31
+Admin --> UC32
+Admin --> UC33
+Admin --> UC34
+Admin --> UC35
+Admin --> UC36
+Admin --> UC37
+Admin --> UC38
+Admin --> UC39
+Admin --> UC40
+Admin --> UC43
+Admin --> UC44
+Admin --> UC45
+
+' HOD Relationships (Primary Actor)
+HOD --> UC1
+HOD --> UC2
+HOD --> UC4
+HOD --> UC10
+HOD --> UC11
+HOD --> UC12
+HOD --> UC13
+HOD --> UC14
+HOD --> UC15
+HOD --> UC16
+HOD --> UC17
+HOD --> UC18
+HOD --> UC19
+HOD --> UC20
+HOD --> UC21
+HOD --> UC23
+HOD --> UC26
+HOD --> UC27
+HOD --> UC28
+HOD --> UC29
+HOD --> UC30
+HOD --> UC31
+HOD --> UC32
+HOD --> UC33
+HOD --> UC34
+HOD --> UC35
+HOD --> UC36
+HOD --> UC37
+HOD --> UC39
+HOD --> UC40
+
+' Staff Relationships (Primary Actor)
+Staff --> UC1
+Staff --> UC2
+Staff --> UC4
+Staff --> UC10
+Staff --> UC11
+Staff --> UC12
+Staff --> UC14
+Staff --> UC16
+Staff --> UC17
+Staff --> UC18
+Staff --> UC21
+Staff --> UC26
+Staff --> UC27
+Staff --> UC28
+Staff --> UC29
+Staff --> UC30
+Staff --> UC39
+Staff --> UC40
+
+' Include Relationships
+UC5 .> UC6 : <<include>>
+UC5 .> UC7 : <<include>>
+UC5 .> UC8 : <<include>>
+UC5 .> UC9 : <<include>>
+
+UC10 .> UC17 : <<include>>
+UC12 .> UC16 : <<include>>
+UC12 .> UC18 : <<include>>
+
+UC27 .> UC26 : <<include>>
+UC28 .> UC27 : <<include>>
+
+UC31 .> UC33 : <<extend>>
+UC31 .> UC34 : <<extend>>
+UC31 .> UC35 : <<extend>>
+UC31 .> UC36 : <<extend>>
+
+' Secondary Actor Relationships
+UC6 --> Email : <<notify>>
+UC13 --> Email : <<notify>>
+UC41 <-- Email
+UC42 --> Email
+
+UC1 --> DB : <<authenticate>>
+UC5 --> DB : <<persist>>
+UC10 --> DB : <<persist>>
+UC27 --> DB : <<persist>>
+UC43 --> DB : <<query>>
+
+UC17 --> FS : <<store>>
+UC18 <-- FS : <<retrieve>>
+UC26 --> FS : <<upload>>
+
+' Notes
+note right of Admin
+  <b>Admin Role:</b>
+  - Full system oversight
+  - User & department management
+  - View all issues (read-only)
+  - Comment on issues
+  - Cannot assign or change status
+  - Access to all reports & audit logs
+end note
+
+note right of HOD
+  <b>HOD Role:</b>
+  - Manage department issues
+  - Assign issues to staff
+  - Change priority & status
+  - Close and reopen issues
+  - View department reports
+  - Data validation
+end note
+
+note right of Staff
+  <b>Staff Role:</b>
+  - Report issues
+  - Update assigned issue status
+  - (OPEN → IN_PROGRESS → RESOLVED)
+  - Add comments
+  - Upload/download attachments
+  - Data validation
+end note
+
+@enduml

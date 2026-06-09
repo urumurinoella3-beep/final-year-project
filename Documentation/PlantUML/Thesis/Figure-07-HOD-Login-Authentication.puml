@@ -1,0 +1,91 @@
+@startuml
+title Figure 7: Head of Department - Login and Authentication Process
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 11
+skinparam dpi 150
+skinparam sequenceMessageAlign center
+
+actor "Head of\nDepartment" as HOD
+participant "Frontend" as UI
+participant "Backend\nAPI" as API
+participant "Auth\nService" as Auth
+participant "JWT\nUtil" as JWT
+database "Database" as DB
+
+== Login Process ==
+
+HOD -> UI: Open Login Page
+UI --> HOD: Display Login Form
+
+HOD -> UI: Enter Email & Password
+UI -> UI: Validate Input\n(Not Empty)
+UI -> API: POST /api/auth/login\n{email, password}
+
+API -> Auth: authenticateUser(credentials)
+Auth -> DB: SELECT * FROM users\nWHERE email = ?
+DB --> Auth: User Record\n(role=HOD, department=Finance)
+
+alt User Not Found
+    Auth --> API: Error: Invalid Credentials
+    API --> UI: 401 Unauthorized
+    UI --> HOD: Error: Invalid Email or Password
+else User Found
+    Auth -> Auth: verifyPassword()\nBCrypt.matches(password, hash)
+    
+    alt Password Incorrect
+        Auth --> API: Error: Invalid Password
+        API --> UI: 401 Unauthorized
+        UI --> HOD: Error: Invalid Email or Password
+    else Password Correct
+        Auth -> Auth: Check isActive
+        
+        alt Account Inactive
+            Auth --> API: Error: Account Deactivated
+            API --> UI: 403 Forbidden
+            UI --> HOD: Error: Account Deactivated
+        else Account Active
+            Auth -> JWT: generateToken()\n{userId, email, role, department}
+            JWT --> Auth: JWT Token\n(expires in 24h)
+            
+            Auth -> DB: INSERT INTO audit_logs\n(user_id, action=LOGIN,\nip_address, user_agent)
+            DB --> Auth: Log Created
+            
+            Auth --> API: {token, user}\n{role=HOD, department=Finance}
+            API --> UI: 200 OK\n{token, user}
+            
+            alt First Login
+                UI -> UI: Check isFirstLogin
+                UI --> HOD: Redirect to\nChange Password
+            else Regular Login
+                UI -> UI: Store Token\n(localStorage)
+                UI --> HOD: Redirect to\nHOD Dashboard
+            end
+        end
+    end
+end
+
+== Dashboard Access ==
+
+HOD -> UI: Access Dashboard
+UI -> UI: Get Token from\nlocalStorage
+UI -> API: GET /api/issues/department\nAuthorization: Bearer {token}
+
+API -> JWT: validateToken(token)
+JWT -> JWT: Verify Signature\n& Expiration
+
+alt Token Invalid/Expired
+    JWT --> API: Error: Invalid Token
+    API --> UI: 401 Unauthorized
+    UI --> HOD: Redirect to Login
+else Token Valid
+    JWT --> API: User Claims\n{userId, role=HOD, dept=Finance}
+    
+    API -> DB: SELECT * FROM issues\nWHERE department = 'Finance'
+    DB --> API: Department Issues
+    
+    API --> UI: 200 OK\n{issues[]}
+    UI --> HOD: Display Dashboard\n(Department Issues Only)
+end
+
+@enduml

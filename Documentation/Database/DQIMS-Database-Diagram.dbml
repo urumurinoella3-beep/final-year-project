@@ -1,0 +1,256 @@
+// DQIMS Database Schema
+// Data Quality Issues Management System
+// Rwanda Revenue Authority (RRA)
+// Use this code at: https://dbdiagram.io/d
+
+Project DQIMS {
+  database_type: 'MySQL'
+  Note: 'Data Quality Issues Management System Database Schema'
+}
+
+// ========================================
+// USERS TABLE
+// ========================================
+Table users {
+  id bigint [pk, increment, note: 'Primary key']
+  employee_id varchar(50) [unique, not null, note: 'RRA employee ID']
+  name varchar(255) [not null, note: 'Full name']
+  email varchar(255) [unique, not null, note: 'Email address for login']
+  phone varchar(20) [not null, note: 'Contact phone number']
+  password_hash varchar(255) [not null, note: 'BCrypt hashed password']
+  role varchar(20) [not null, note: 'ADMIN, HOD, or STAFF']
+  department varchar(100) [not null, note: 'Department name']
+  is_active boolean [default: true, note: 'Account active status']
+  is_first_login boolean [default: true, note: 'First time login flag']
+  password_reset_token varchar(255) [null, note: 'Password reset token']
+  password_reset_expiry datetime [null, note: 'Token expiration time']
+  created_at datetime [not null, default: `now()`, note: 'Account creation timestamp']
+  updated_at datetime [not null, default: `now()`, note: 'Last update timestamp']
+  
+  Indexes {
+    email [unique, name: 'idx_users_email']
+    employee_id [unique, name: 'idx_users_employee_id']
+    department [name: 'idx_users_department']
+    role [name: 'idx_users_role']
+  }
+  
+  Note: 'System users: Admin, HOD, and Staff members'
+}
+
+// ========================================
+// DEPARTMENTS TABLE
+// ========================================
+Table departments {
+  id bigint [pk, increment, note: 'Primary key']
+  name varchar(100) [unique, not null, note: 'Department name']
+  description text [null, note: 'Department description']
+  is_active boolean [default: true, note: 'Department active status']
+  created_at datetime [not null, default: `now()`, note: 'Creation timestamp']
+  updated_at datetime [not null, default: `now()`, note: 'Last update timestamp']
+  
+  Indexes {
+    name [unique, name: 'idx_departments_name']
+  }
+  
+  Note: 'Organizational departments within RRA'
+}
+
+// ========================================
+// ISSUES TABLE
+// ========================================
+Table issues {
+  id bigint [pk, increment, note: 'Primary key']
+  title varchar(255) [not null, note: 'Issue title/summary']
+  description text [not null, note: 'Detailed issue description']
+  source varchar(100) [not null, note: 'Data source (e.g., Tax Returns)']
+  data_element varchar(100) [not null, note: 'Specific data element affected']
+  issue_type varchar(50) [not null, note: 'Type (Missing Data, Inconsistency, etc.)']
+  severity varchar(20) [not null, note: 'Low, Medium, High, Critical']
+  priority varchar(20) [not null, note: 'Low, Medium, High, Critical']
+  status varchar(20) [not null, default: 'OPEN', note: 'OPEN, IN_PROGRESS, RESOLVED, CLOSED']
+  department varchar(100) [not null, note: 'Department responsible']
+  reported_by bigint [not null, ref: > users.id, note: 'User who reported']
+  assigned_to bigint [null, ref: > users.id, note: 'User assigned to resolve']
+  closed_by bigint [null, ref: > users.id, note: 'User who closed the issue']
+  is_delegated boolean [default: false, note: 'Whether issue was delegated']
+  delegated_from varchar(100) [null, note: 'Original department if delegated']
+  created_at datetime [not null, default: `now()`, note: 'Issue creation timestamp']
+  updated_at datetime [not null, default: `now()`, note: 'Last update timestamp']
+  resolved_at datetime [null, note: 'Resolution timestamp']
+  closed_at datetime [null, note: 'Closure timestamp']
+  
+  Indexes {
+    status [name: 'idx_issues_status']
+    department [name: 'idx_issues_department']
+    priority [name: 'idx_issues_priority']
+    reported_by [name: 'idx_issues_reported_by']
+    assigned_to [name: 'idx_issues_assigned_to']
+    created_at [name: 'idx_issues_created_at']
+  }
+  
+  Note: 'Core table storing all data quality issues'
+}
+
+// ========================================
+// ISSUE COMMENTS TABLE
+// ========================================
+Table issue_comments {
+  id bigint [pk, increment, note: 'Primary key']
+  issue_id bigint [not null, ref: > issues.id, note: 'Associated issue']
+  user_id bigint [not null, ref: > users.id, note: 'Comment author']
+  content text [not null, note: 'Comment text content']
+  created_at datetime [not null, default: `now()`, note: 'Comment creation timestamp']
+  updated_at datetime [not null, default: `now()`, note: 'Last edit timestamp']
+  is_edited boolean [default: false, note: 'Whether comment was edited']
+  
+  Indexes {
+    issue_id [name: 'idx_comments_issue_id']
+    user_id [name: 'idx_comments_user_id']
+    created_at [name: 'idx_comments_created_at']
+  }
+  
+  Note: 'Comments and discussions on issues'
+}
+
+// ========================================
+// ISSUE ATTACHMENTS TABLE
+// ========================================
+Table issue_attachments {
+  id bigint [pk, increment, note: 'Primary key']
+  issue_id bigint [not null, ref: > issues.id, note: 'Associated issue']
+  file_name varchar(255) [not null, note: 'Original file name']
+  file_path varchar(500) [not null, note: 'Server file path']
+  file_type varchar(50) [null, note: 'MIME type']
+  file_size bigint [null, note: 'File size in bytes']
+  uploaded_by bigint [not null, ref: > users.id, note: 'User who uploaded']
+  uploaded_at datetime [not null, default: `now()`, note: 'Upload timestamp']
+  
+  Indexes {
+    issue_id [name: 'idx_attachments_issue_id']
+    uploaded_by [name: 'idx_attachments_uploaded_by']
+  }
+  
+  Note: 'File attachments associated with issues'
+}
+
+// ========================================
+// NOTIFICATIONS TABLE
+// ========================================
+Table notifications {
+  id bigint [pk, increment, note: 'Primary key']
+  user_id bigint [not null, ref: > users.id, note: 'Recipient user']
+  type varchar(50) [not null, note: 'ISSUE_ASSIGNED, STATUS_UPDATED, etc.']
+  title varchar(255) [not null, note: 'Notification title']
+  message text [not null, note: 'Notification message']
+  issue_id bigint [null, ref: > issues.id, note: 'Related issue (if applicable)']
+  is_read boolean [default: false, note: 'Read status']
+  created_at datetime [not null, default: `now()`, note: 'Creation timestamp']
+  read_at datetime [null, note: 'Read timestamp']
+  
+  Indexes {
+    user_id [name: 'idx_notifications_user_id']
+    is_read [name: 'idx_notifications_is_read']
+    created_at [name: 'idx_notifications_created_at']
+  }
+  
+  Note: 'In-app notifications for users'
+}
+
+// ========================================
+// AUDIT LOGS TABLE
+// ========================================
+Table audit_logs {
+  id bigint [pk, increment, note: 'Primary key']
+  user_id bigint [not null, ref: > users.id, note: 'User who performed action']
+  action varchar(100) [not null, note: 'Action performed (LOGIN, ISSUE_CREATED, etc.)']
+  entity_type varchar(50) [null, note: 'Entity type affected (Issue, User, etc.)']
+  entity_id bigint [null, note: 'ID of affected entity']
+  details text [null, note: 'Additional action details (JSON format)']
+  ip_address varchar(45) [null, note: 'User IP address']
+  user_agent text [null, note: 'Browser/client user agent']
+  created_at datetime [not null, default: `now()`, note: 'Action timestamp']
+  
+  Indexes {
+    user_id [name: 'idx_audit_logs_user_id']
+    action [name: 'idx_audit_logs_action']
+    entity_type [name: 'idx_audit_logs_entity_type']
+    created_at [name: 'idx_audit_logs_created_at']
+  }
+  
+  Note: 'Tracks all system activities for compliance and security'
+}
+
+// ========================================
+// PASSWORD HISTORY TABLE
+// ========================================
+Table password_history {
+  id bigint [pk, increment, note: 'Primary key']
+  user_id bigint [not null, ref: > users.id, note: 'User account']
+  password_hash varchar(255) [not null, note: 'Historical password hash']
+  created_at datetime [not null, default: `now()`, note: 'Password creation timestamp']
+  
+  Indexes {
+    user_id [name: 'idx_password_history_user_id']
+    created_at [name: 'idx_password_history_created_at']
+  }
+  
+  Note: 'Prevents password reuse for security compliance'
+}
+
+// ========================================
+// VALIDATION SESSIONS TABLE
+// ========================================
+Table validation_sessions {
+  id bigint [pk, increment, note: 'Primary key']
+  user_id bigint [not null, ref: > users.id, note: 'User who performed validation']
+  file_name varchar(255) [not null, note: 'Uploaded file name']
+  total_records int [not null, note: 'Total records in file']
+  passed_records int [not null, note: 'Records that passed validation']
+  failed_records int [not null, note: 'Records that failed validation']
+  created_at datetime [not null, default: `now()`, note: 'Validation timestamp']
+  
+  Indexes {
+    user_id [name: 'idx_validation_sessions_user_id']
+    created_at [name: 'idx_validation_sessions_created_at']
+  }
+  
+  Note: 'Tracks data validation operations'
+}
+
+// ========================================
+// VALIDATION ERRORS TABLE
+// ========================================
+Table validation_errors {
+  id bigint [pk, increment, note: 'Primary key']
+  session_id bigint [not null, ref: > validation_sessions.id, note: 'Associated validation session']
+  row_number int [not null, note: 'Row number in source file']
+  error_type varchar(50) [not null, note: 'MISSING_VALUE, INVALID_FORMAT, etc.']
+  field_name varchar(100) [not null, note: 'Field/column name with error']
+  description text [not null, note: 'Error description']
+  value varchar(500) [null, note: 'Invalid value found']
+  created_at datetime [not null, default: `now()`, note: 'Error detection timestamp']
+  
+  Indexes {
+    session_id [name: 'idx_validation_errors_session_id']
+    error_type [name: 'idx_validation_errors_error_type']
+  }
+  
+  Note: 'Specific validation errors found during data validation'
+}
+
+// ========================================
+// RELATIONSHIPS SUMMARY
+// ========================================
+// users (1) -> (many) issues [reported_by]
+// users (1) -> (many) issues [assigned_to]
+// users (1) -> (many) issues [closed_by]
+// users (1) -> (many) issue_comments
+// users (1) -> (many) issue_attachments
+// users (1) -> (many) notifications
+// users (1) -> (many) audit_logs
+// users (1) -> (many) password_history
+// users (1) -> (many) validation_sessions
+// issues (1) -> (many) issue_comments
+// issues (1) -> (many) issue_attachments
+// issues (1) -> (many) notifications
+// validation_sessions (1) -> (many) validation_errors

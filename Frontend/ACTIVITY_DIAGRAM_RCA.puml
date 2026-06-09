@@ -1,0 +1,327 @@
+@startuml DQIMS_Activity_Root_Cause_Analysis
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 10
+
+title <size:16><b>DQIMS - Root Cause Analysis Activity Diagram</b></size>\n<size:12>5 Whys Method with HOD Approval Workflow</size>\n
+
+|#FCE4EC|Assigned Member|
+start
+:Receive Issue Assignment;
+
+:Investigate Issue;
+
+:Gather Information:
+- Review issue details
+- Check related data
+- Interview stakeholders
+- Analyze patterns;
+
+:Navigate to Issue Detail Page;
+
+:Click "Create Root Cause Analysis";
+
+:Select Analysis Method;
+note right: 5 Whys or Fishbone
+
+if (Method Selected?) then (5 WHYS)
+  
+  :Fill 5 Whys Form:
+  
+  **Why 1:** Why did the issue occur?
+  → [Answer 1]
+  
+  **Why 2:** Why did [Answer 1] happen?
+  → [Answer 2]
+  
+  **Why 3:** Why did [Answer 2] happen?
+  → [Answer 3]
+  
+  **Why 4:** Why did [Answer 3] happen?
+  → [Answer 4]
+  
+  **Why 5:** Why did [Answer 4] happen?
+  → [Answer 5] = ROOT CAUSE;
+  
+else (FISHBONE)
+  
+  :Fill Fishbone Analysis:
+  
+  **People Factors:**
+  - Training gaps
+  - Knowledge issues
+  
+  **Process Factors:**
+  - Procedure problems
+  - Workflow issues
+  
+  **Technology Factors:**
+  - System bugs
+  - Integration errors
+  
+  **Environment Factors:**
+  - Time pressure
+  - Resource constraints
+  
+  **Material Factors:**
+  - Data quality
+  - Source issues
+  
+  **Measurement Factors:**
+  - Missing metrics
+  - Poor monitoring;
+  
+endif
+
+:Identify Root Cause;
+
+:Document Corrective Actions:
+"What to do NOW to fix this issue";
+
+:Document Preventive Actions:
+"What to do to PREVENT future issues";
+
+:Add Supporting Evidence/Attachments;
+
+:Save as DRAFT;
+
+|#E3F2FD|System|
+:Create RCA Record:
+- issue_id
+- analysis_method
+- why_1 to why_5 (or fishbone factors)
+- root_cause
+- corrective_actions
+- preventive_actions
+- analyzed_by = current user
+- status = DRAFT
+- created_at = now;
+
+:Save to database;
+
+:Return Success;
+
+|Assigned Member|
+:Review RCA Draft;
+
+if (Ready to Submit?) then (no)
+  :Edit and Refine Analysis;
+  :Update RCA;
+  |System|
+  :Save Changes;
+  |Assigned Member|
+else (yes)
+endif
+
+:Click "Submit for Review" Button;
+
+|System|
+:Validate RCA Completeness;
+
+if (All Required Fields Filled?) then (no)
+  :Return Error: Incomplete RCA;
+  |Assigned Member|
+  stop
+else (yes)
+endif
+
+:Update RCA Status = PENDING_REVIEW;
+
+:Set analyzed_at = now;
+
+:Create Audit Log Entry;
+
+|#FFF3E0|Notification Service|
+fork
+  :Create Notification for HOD;
+fork again
+  :Send Email to HOD:
+  "RCA submitted for review
+  Issue: ISS-XXXX-YYYY";
+end fork
+
+|System|
+:Return Success;
+
+|Assigned Member|
+:Display: "RCA Submitted for Review";
+
+:Wait for HOD Response;
+
+' ========== HOD REVIEW ==========
+
+|#E8F5E9|HOD (Head of Department)|
+:Receive Notification;
+
+:Navigate to Issue Detail Page;
+
+:Click "View RCA" Tab;
+
+:Review Root Cause Analysis:
+- Read all Why questions
+- Verify root cause makes sense
+- Check corrective actions are specific
+- Check preventive actions are comprehensive;
+
+:Evaluate Quality of Analysis;
+
+if (RCA Quality Acceptable?) then (yes)
+  
+  :Click "Approve" Button;
+  
+  :Add Approval Comments (optional);
+  
+  :Click "Confirm Approval";
+  
+  |System|
+  :Update RCA:
+  - status = APPROVED
+  - reviewed_by = HOD
+  - reviewed_at = now;
+  
+  :Update Related Issue:
+  - Add preventive actions to notes
+  - Update tags;
+  
+  :Create Issue History Entry:
+  "RCA approved by [HOD Name]";
+  
+  :Create Audit Log Entry;
+  
+  |Notification Service|
+  fork
+    :Notify Analyst: "RCA Approved";
+  fork again
+    :Notify Department Team:
+    "Preventive actions identified";
+  end fork
+  
+  |System|
+  :Return Success;
+  
+  |HOD (Head of Department)|
+  :Display: "RCA Approved Successfully";
+  
+  |Assigned Member|
+  :Receive Approval Notification;
+  
+  :Implement Preventive Actions;
+  
+  :Update Issue Status;
+  
+  :Close Issue;
+  
+else (no)
+  
+  :Click "Reject" Button;
+  
+  :Enter Rejection Reason:
+  - What's missing?
+  - What needs improvement?
+  - Specific feedback;
+  
+  :Click "Confirm Rejection";
+  
+  |System|
+  :Update RCA:
+  - status = REJECTED
+  - reviewed_by = HOD
+  - reviewed_at = now
+  - rejection_reason;
+  
+  :Create Audit Log Entry;
+  
+  |Notification Service|
+  fork
+    :Notify Analyst: "RCA Rejected";
+  fork again
+    :Send Email with Feedback;
+  end fork
+  
+  |System|
+  :Return Success;
+  
+  |HOD (Head of Department)|
+  :Display: "RCA Rejected. Feedback Sent.";
+  
+  |Assigned Member|
+  :Receive Rejection Notification;
+  
+  :Read HOD Feedback;
+  
+  :Revise RCA;
+  
+  :Update Analysis:
+  - Address feedback
+  - Strengthen analysis
+  - Add more details;
+  
+  |System|
+  :Update RCA Record;
+  
+  :Keep status = DRAFT or REJECTED;
+  
+  |Assigned Member|
+  :Submit Again for Review;
+  
+  |System|
+  :Set status = PENDING_REVIEW;
+  
+  :Notify HOD Again;
+  
+  |HOD (Head of Department)|
+  :Review Updated RCA;
+  
+  note right
+    Cycle repeats until approved
+  end note
+  
+endif
+
+stop
+
+legend right
+  <b>RCA Workflow States:</b>
+  
+  <b>DRAFT</b>
+  • Analyst is working on RCA
+  • Can edit freely
+  • Not yet submitted
+  
+  <b>PENDING_REVIEW</b>
+  • Submitted to HOD
+  • Waiting for approval
+  • Cannot edit
+  
+  <b>APPROVED</b>
+  • HOD approved
+  • Preventive actions accepted
+  • Ready for implementation
+  
+  <b>REJECTED</b>
+  • HOD rejected with feedback
+  • Needs revision
+  • Can edit and resubmit
+  
+  <b>Analysis Methods:</b>
+  
+  <b>5 Whys:</b>
+  Ask "why" 5 times to dig
+  deeper to root cause
+  
+  <b>Fishbone (6M):</b>
+  • Man (People)
+  • Machine (Technology)
+  • Method (Process)
+  • Mother Nature (Environment)
+  • Material (Data/Materials)
+  • Measurement (Metrics)
+  
+  <b>Key Benefits:</b>
+  • Prevents recurrence
+  • Documents lessons learned
+  • Improves processes
+  • Knowledge sharing
+endlegend
+
+@enduml

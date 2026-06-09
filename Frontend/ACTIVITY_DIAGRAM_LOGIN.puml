@@ -1,0 +1,138 @@
+@startuml DQIMS_Activity_Login_Authentication
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 11
+
+title <size:16><b>DQIMS - User Login & Authentication Activity Diagram</b></size>\n<size:12>Rwanda Revenue Authority</size>\n
+
+|User|
+start
+:Open DQIMS Application;
+
+:Select Role (ADMIN/HOD/SECRETARY/MEMBER);
+
+:Enter Email and Password;
+
+:Click Login Button;
+
+|System|
+:Receive Login Request;
+
+if (Is Role Valid?) then (no)
+  :Return Error: Invalid Role;
+  |User|
+  stop
+else (yes)
+endif
+
+:Validate Email Format;
+
+if (Email Valid?) then (no)
+  :Return Error: Invalid Email;
+  |User|
+  stop
+else (yes)
+endif
+
+:Query Database for User;
+
+if (User Exists?) then (no)
+  :Return Error: User Not Found;
+  :Log Failed Login Attempt;
+  |User|
+  stop
+else (yes)
+endif
+
+if (Is User Active?) then (no)
+  :Return Error: Account Deactivated;
+  :Notify Admin;
+  |User|
+  stop
+else (yes)
+endif
+
+:Verify Password (BCrypt);
+
+if (Password Correct?) then (no)
+  :Increment Failed Login Count;
+  if (Failed Attempts >= 3?) then (yes)
+    :Lock Account (15 minutes);
+    :Send Alert to Admin;
+  endif
+  :Return Error: Invalid Credentials;
+  |User|
+  stop
+else (yes)
+endif
+
+:Reset Failed Login Count;
+
+if (Password Change Required?) then (yes)
+  :Return: PASSWORD_CHANGE_REQUIRED;
+  :Send Password Change Token;
+  
+  |User|
+  :Receive Prompt to Change Password;
+  :Enter New Password;
+  :Confirm New Password;
+  
+  |System|
+  :Validate New Password;
+  
+  if (Meets Password Policy?) then (no)
+    :Return Error: Weak Password;
+    |User|
+    stop
+  else (yes)
+  endif
+  
+  :Hash New Password (BCrypt);
+  :Update User Record;
+  :Set password_change_required = false;
+  :Set last_password_change = now;
+  
+  :Return Success Message;
+  
+  |User|
+  :Login Again with New Password;
+  
+  |System|
+  :Process Login Request;
+endif
+
+:Generate JWT Access Token (1hr expiry);
+:Generate JWT Refresh Token (7 days expiry);
+
+:Load User Permissions Based on Role;
+
+:Update last_login Timestamp;
+
+:Create Audit Log Entry;
+
+:Return Login Success Response with:
+- Access Token
+- Refresh Token
+- User Details
+- Permissions;
+
+|User|
+:Store Tokens in Browser;
+
+:Redirect to Dashboard;
+
+:Access Protected Resources;
+
+note right
+  <b>JWT Token includes:</b>
+  - User ID
+  - Email
+  - Role
+  - Department ID
+  - Permissions
+  - Expiry (1 hour)
+end note
+
+stop
+
+@enduml

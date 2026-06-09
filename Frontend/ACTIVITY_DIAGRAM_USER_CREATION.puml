@@ -1,0 +1,299 @@
+@startuml DQIMS_Activity_User_Creation
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 10
+
+title <size:16><b>DQIMS - User Creation & First Login Activity Diagram</b></size>\n<size:12>Complete User Onboarding Workflow with Email Notification</size>\n
+
+|#E8F5E9|ADMIN|
+start
+:Navigate to User Management Module;
+
+:Click "Create User" Button;
+
+:Fill User Creation Form:
+- Employee ID (permanent)
+- Email
+- Full Name
+- Role (ADMIN/HOD/SECRETARY/MEMBER)
+- Department
+- Phone Number;
+
+:Click "Create" Button;
+
+|#E3F2FD|System|
+:Receive User Creation Request;
+
+:Validate Admin Permissions;
+
+if (User is ADMIN?) then (no)
+  :Return Error: Unauthorized;
+  |ADMIN|
+  stop
+else (yes)
+endif
+
+:Validate Form Data;
+
+if (All Fields Valid?) then (no)
+  :Return Validation Errors;
+  |ADMIN|
+  :Correct Errors;
+  :Resubmit Form;
+  |System|
+endif
+
+:Check Employee ID Uniqueness;
+
+if (Employee ID Already Exists?) then (yes)
+  :Return Error: Duplicate Employee ID;
+  |ADMIN|
+  stop
+else (no)
+endif
+
+:Check Email Uniqueness;
+
+if (Email Already Exists?) then (yes)
+  :Return Error: Email Already Used;
+  |ADMIN|
+  stop
+else (no)
+endif
+
+:Generate Temporary Password:
+- 12 characters
+- Uppercase + Lowercase + Numbers + Special
+- Example: TempPass123!;
+
+:Hash Password with BCrypt (strength 12);
+
+:Begin Database Transaction;
+
+:Create User Record:
+- employee_id
+- email
+- password_hash
+- full_name
+- role
+- department_id
+- phone
+- is_active = true
+- password_change_required = true
+- created_at = now;
+
+:Save to users table;
+
+:Create Audit Log Entry:
+- action = CREATE
+- module = UserManagement
+- entity = User
+- created_by = admin;
+
+:Commit Transaction;
+
+|#FFF3E0|Email Service|
+split
+  :Prepare Email Template;
+  
+  :Populate Template Variables:
+  - {{fullName}}
+  - {{employeeId}}
+  - {{email}}
+  - {{tempPassword}}
+  - {{department}}
+  - {{role}};
+  
+  :Generate HTML Email;
+  
+  :Send Email via SMTP:
+  - To: user's email
+  - Subject: "DQIMS - Your Account Created"
+  - Body: HTML template;
+  
+  if (Email Sent Successfully?) then (yes)
+    :Log: Email Sent;
+  else (no)
+    :Log: Email Failed;
+    :Queue for Retry;
+  endif
+  
+split again
+  :Create In-App Welcome Notification;
+end split
+
+|System|
+:Return Success Response:
+- user_id
+- employee_id
+- email
+- message: "User created. Email sent.";
+
+|ADMIN|
+:Display Success Message;
+
+:View User in Users List;
+
+note right
+  <b>Email Sent to New User:</b>
+  
+  Dear [Full Name],
+  
+  Your DQIMS account created.
+  
+  <b>Login Details:</b>
+  Employee ID: EMP005
+  Email: user@rra.gov.rw
+  Temp Password: TempPass123!
+  
+  <b>IMPORTANT:</b> Change password
+  on first login.
+  
+  Login: https://dqims.rra.gov.rw
+end note
+
+' ========== USER FIRST LOGIN ==========
+
+|#FCE4EC|New User|
+:Receive Email;
+
+:Read Login Credentials;
+
+:Open DQIMS Application;
+
+:Select Role from Email;
+
+:Enter Email & Temp Password;
+
+:Click Login;
+
+|#E3F2FD|System|
+:Validate Credentials;
+
+if (Credentials Valid?) then (no)
+  :Return Error: Invalid Credentials;
+  |New User|
+  stop
+else (yes)
+endif
+
+:Check password_change_required;
+
+if (password_change_required = true?) then (yes)
+  :Return Response:
+  - error: PASSWORD_CHANGE_REQUIRED
+  - passwordChangeToken
+  - message: "Must change password";
+  
+  |New User|
+  :Receive Password Change Prompt;
+  
+  :Enter New Password;
+  
+  :Confirm New Password;
+  
+  :Click "Change Password";
+  
+  |System|
+  :Receive Password Change Request;
+  
+  :Validate Password Change Token;
+  
+  if (Token Valid?) then (no)
+    :Return Error: Invalid Token;
+    |New User|
+    stop
+  else (yes)
+  endif
+  
+  :Validate New Password;
+  
+  if (Passwords Match?) then (no)
+    :Return Error: Passwords Don't Match;
+    |New User|
+    stop
+  else (yes)
+  endif
+  
+  if (Meets Password Policy?) then (no)
+    :Return Error: Weak Password
+    (Need 8+ chars, uppercase,
+    lowercase, number, special);
+    |New User|
+    stop
+  else (yes)
+  endif
+  
+  :Hash New Password (BCrypt);
+  
+  :Update User Record:
+  - password_hash = new hash
+  - password_change_required = false
+  - last_password_change = now;
+  
+  :Create Audit Log:
+  "Password changed successfully";
+  
+  :Return Success:
+  "Password changed. Please login.";
+  
+  |New User|
+  :See Success Message;
+  
+  :Login Again with New Password;
+  
+  |System|
+  :Validate New Credentials;
+  
+  :Generate JWT Tokens;
+  
+  :Update last_login;
+  
+  :Return Login Success;
+  
+  |New User|
+  :Redirected to Dashboard;
+  
+  :Access System;
+  
+  :Start Using DQIMS;
+  
+else (no)
+  :Generate JWT Tokens;
+  :Return Login Success;
+  |New User|
+  :Access Dashboard;
+endif
+
+stop
+
+legend right
+  <b>Key Steps:</b>
+  
+  <b>1. User Creation</b>
+  • ADMIN creates user
+  • System validates uniqueness
+  • Generates temp password
+  • Sends email notification
+  
+  <b>2. First Login</b>
+  • User receives email
+  • Logs in with temp password
+  • Forced to change password
+  • Password must meet policy
+  
+  <b>3. Password Policy</b>
+  • Minimum 8 characters
+  • At least 1 uppercase
+  • At least 1 lowercase
+  • At least 1 number
+  • At least 1 special char
+  
+  <b>4. Security</b>
+  • BCrypt hashing (strength 12)
+  • Password change required flag
+  • Audit logging
+  • Email notification
+endlegend
+
+@enduml

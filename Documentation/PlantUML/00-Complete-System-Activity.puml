@@ -1,0 +1,368 @@
+@startuml DQIMS_Complete_System_Activity
+!theme plain
+skinparam activityBackgroundColor #F5F5F5
+skinparam activityBorderColor #333333
+skinparam activityStartColor #2E7D32
+skinparam activityEndColor #C62828
+
+title Data Quality Issues Management System (DQIMS)\nComplete System Activity Diagram
+
+|#LightBlue|User|
+start
+
+:Access DQIMS System;
+:Enter Email & Password;
+:Click Login;
+
+|#LightGray|System|
+:Validate Credentials;
+
+if (Authentication Successful?) then (yes)
+  
+  if (First Login?) then (yes)
+    |#LightBlue|User|
+    :Change Password;
+    :Enter New Password;
+    
+    |#LightGray|System|
+    :Update Password;
+    :Set isFirstLogin = false;
+  endif
+  
+  |#LightGray|System|
+  :Generate JWT Token;
+  :Create Audit Log;
+  
+  |#LightBlue|User|
+  :Access Dashboard;
+  
+  ' Role-based branching
+  if (User Role?) then (ADMIN)
+    
+    |#FFE0B2|Admin|
+    partition "Admin Activities" {
+      :View All Issues (Read-Only);
+      :Manage Users;
+      
+      if (Create New User?) then (yes)
+        :Fill User Form;
+        :Submit;
+        
+        |#LightGray|System|
+        :Validate Input;
+        :Generate Password;
+        :Create User Account;
+        :Send Welcome Email;
+        :Create Audit Log;
+        
+        |#FFE0B2|Admin|
+        :View User List;
+      endif
+      
+      :Manage Departments;
+      :Add Comments to Issues;
+      :View Reports & Analytics;
+      :View Audit Logs;
+    }
+    
+  elseif (HOD) then
+    
+    |#C8E6C9|HOD|
+    partition "HOD Activities" {
+      :View Department Issues;
+      
+      ' Issue Reporting
+      if (Report New Issue?) then (yes)
+        :Click "Report Issue";
+        :Fill Issue Details;
+        note right
+          - Title, Description
+          - Source, Data Element
+          - Issue Type, Severity
+          - Priority, Department
+        end note
+        :Upload Attachments;
+        :Submit Issue;
+        
+        |#LightGray|System|
+        :Validate Input;
+        :Create Issue (Status=OPEN);
+        :Create Audit Log;
+        :Notify Department HOD;
+        :Send Email Notification;
+      endif
+      
+      ' Issue Assignment
+      if (Assign Issue?) then (yes)
+        :Select Issue;
+        :View Department Staff;
+        :Select Staff Member;
+        :Confirm Assignment;
+        
+        |#LightGray|System|
+        :Update Issue Assignment;
+        :Create Notification;
+        :Send Email to Staff;
+        :Create Audit Log;
+        
+        |#C8E6C9|HOD|
+        :View Updated Issue;
+      endif
+      
+      ' Change Priority
+      if (Change Priority?) then (yes)
+        :Select Issue;
+        :Change Priority Level;
+        
+        |#LightGray|System|
+        :Update Issue Priority;
+        :Notify Assigned Staff;
+        :Create Audit Log;
+      endif
+      
+      ' Review Resolved Issues
+      if (Review Resolved Issue?) then (yes)
+        :View Issue Details;
+        :Review Resolution;
+        
+        if (Approve Resolution?) then (yes)
+          :Click "Close Issue";
+          
+          |#LightGray|System|
+          :Update Status = CLOSED;
+          :Set closedAt timestamp;
+          :Set closedBy = HOD;
+          :Notify Staff;
+          :Send Email;
+          :Create Audit Log;
+          
+        else (no - Reopen)
+          :Add Comment;
+          :Click "Reopen Issue";
+          
+          |#LightGray|System|
+          :Update Status = IN_PROGRESS;
+          :Clear resolvedAt;
+          :Notify Staff;
+          :Send Email with Comment;
+          :Create Audit Log;
+        endif
+      endif
+      
+      ' Data Validation
+      if (Validate Data?) then (yes)
+        :Navigate to Data Validation;
+        :Upload File (CSV/Excel/PDF/Word);
+        
+        |#LightGray|System|
+        :Save File;
+        :Create Validation Session;
+        
+        if (File Type?) then (CSV/Excel)
+          :Parse File Content;
+          :Validate Each Row;
+          :Record Errors;
+          :Calculate Statistics;
+          
+          |#C8E6C9|HOD|
+          :View Validation Results;
+          :View Error Details;
+          
+          if (Create Issue from Errors?) then (yes)
+            :Pre-fill Issue Form;
+            :Submit Issue;
+            
+            |#LightGray|System|
+            :Create Issue;
+            :Link Validation Session;
+          endif
+          
+        else (PDF/Word)
+          :Basic Validation;
+          
+          |#C8E6C9|HOD|
+          :View Success Message;
+        endif
+      endif
+      
+      ' Generate Reports
+      if (Generate Report?) then (yes)
+        :Select Filters;
+        :View Dashboard;
+        
+        if (Export Report?) then (yes)
+          :Select Format (PDF/Excel/CSV/Word);
+          
+          |#LightGray|System|
+          :Generate Report;
+          :Include Statistics;
+          :Include Issue Details;
+          
+          |#C8E6C9|HOD|
+          :Download Report;
+        endif
+      endif
+      
+      :Add Comments;
+      :View Notifications;
+    }
+    
+  else (STAFF)
+    
+    |#FFF9C4|Staff|
+    partition "Staff Activities" {
+      :View Assigned Issues;
+      :View Notifications;
+      
+      ' Report Issue
+      if (Report New Issue?) then (yes)
+        :Click "Report Issue";
+        :Fill Issue Details;
+        :Upload Attachments;
+        :Submit Issue;
+        
+        |#LightGray|System|
+        :Create Issue (Status=OPEN);
+        :Notify HOD;
+        :Send Email;
+        :Create Audit Log;
+      endif
+      
+      ' Work on Assigned Issue
+      if (Open Assigned Issue?) then (yes)
+        :Click on Issue;
+        
+        |#LightGray|System|
+        if (Issue Status = OPEN?) then (yes)
+          :Auto-change to IN_PROGRESS;
+          :Update timestamp;
+          :Notify HOD;
+          :Create Audit Log;
+        endif
+        
+        |#FFF9C4|Staff|
+        :View Issue Details;
+        :Read Description;
+        :Download Attachments;
+        
+        repeat
+          :Work on Resolution;
+          :Add Progress Comments;
+        repeat while (Issue Resolved?) is (no)
+        ->yes;
+        
+        :Click "Mark as Resolved";
+        
+        |#LightGray|System|
+        :Update Status = RESOLVED;
+        :Set resolvedAt timestamp;
+        :Notify HOD;
+        :Send Email to HOD;
+        :Create Audit Log;
+        
+        |#FFF9C4|Staff|
+        :Wait for HOD Review;
+        
+        |#LightGray|System|
+        note right
+          HOD will either:
+          - Close issue (CLOSED)
+          - Reopen issue (IN_PROGRESS)
+        end note
+        
+        if (HOD Decision?) then (Closed)
+          :Receive Closure Notification;
+        else (Reopened)
+          :Receive Reopen Notification;
+          :Continue Working;
+        endif
+      endif
+      
+      ' Data Validation
+      if (Validate Data?) then (yes)
+        :Upload File;
+        
+        |#LightGray|System|
+        :Validate File;
+        :Show Results;
+        
+        |#FFF9C4|Staff|
+        :View Validation Report;
+        
+        if (Create Issue?) then (yes)
+          :Submit Issue;
+        endif
+      endif
+      
+      :Add Comments;
+      :Upload Attachments;
+      :View Notifications;
+    }
+    
+  endif
+  
+  ' Common Activities for All Roles
+  |#LightBlue|User|
+  partition "Common Activities" {
+    :View Notifications;
+    :Mark Notifications as Read;
+    :Change Password (Optional);
+    :View Profile;
+  }
+  
+  :Logout;
+  
+  |#LightGray|System|
+  :Revoke JWT Token;
+  :Create Audit Log;
+  
+else (no - Authentication Failed)
+  |#LightBlue|User|
+  :Display Error Message;
+  
+  if (Forgot Password?) then (yes)
+    :Enter Email;
+    :Click "Send Reset Link";
+    
+    |#LightGray|System|
+    :Generate Reset Token;
+    :Send Reset Email;
+    
+    |#LightBlue|User|
+    :Check Email;
+    :Click Reset Link;
+    :Enter New Password;
+    
+    |#LightGray|System|
+    :Validate Token;
+    :Update Password;
+    :Send Confirmation Email;
+    
+    |#LightBlue|User|
+    :Login with New Password;
+  else (no)
+    :Return to Login;
+  endif
+endif
+
+stop
+
+legend right
+  |<#FFE0B2> Admin Activities |
+  |<#C8E6C9> HOD Activities |
+  |<#FFF9C4> Staff Activities |
+  |<#LightGray> System Processing |
+  
+  <b>Status Workflow:</b>
+  OPEN → IN_PROGRESS → RESOLVED → CLOSED
+  
+  <b>Key Features:</b>
+  • Role-based access control
+  • Automated notifications
+  • Email integration
+  • Audit logging
+  • Data validation
+  • Multi-format reporting
+endlegend
+
+@enduml

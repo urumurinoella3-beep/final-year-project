@@ -1,0 +1,61 @@
+@startuml
+title Figure 5: System Administrator - Department Management & System Reports
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 11
+skinparam dpi 150
+skinparam sequenceMessageAlign center
+
+actor "System\nAdministrator" as Admin
+participant "System" as System
+database "Database" as DB
+participant "Report\nGenerator" as Report
+
+== Department Management ==
+
+Admin -> System: Create Department\n(Name, Description)
+System -> DB: Check Department Exists\n(Name)
+DB --> System: Not Found
+System -> DB: INSERT INTO departments\n(name, description, isActive=true)
+DB --> System: Department Created\n(Department ID)
+System --> Admin: Department Created\nSuccessfully
+
+Admin -> System: View All Departments
+System -> DB: SELECT * FROM departments\nWHERE isActive=true
+DB --> System: Department List
+System --> Admin: Display Departments\n(Name, Description, HOD)
+
+Admin -> System: Update Department\n(Name, Description)
+System -> DB: UPDATE departments\nSET description
+DB --> System: Department Updated
+System --> Admin: Department Updated\nSuccessfully
+
+== System Reports ==
+
+Admin -> System: Generate System Report\n(Date Range, Filters)
+System -> DB: SELECT issues, users,\ndepartments statistics
+DB --> System: Aggregated Data\n(Total Issues, By Status,\nBy Department, By Priority)
+System -> Report: Generate Report\n(PDF/Excel/CSV/Word)
+Report -> Report: Create Charts\n(Pie, Bar, Line)
+Report -> Report: Format Tables\n(Issue Details)
+Report -> Report: Add RRA Logo\n& Header
+Report --> System: Report File Generated
+System --> Admin: Download Report\n(report.pdf)
+
+Admin -> System: View Audit Logs\n(Filter by User/Action)
+System -> DB: SELECT * FROM audit_logs\nWHERE filters
+DB --> System: Audit Log Records\n(User, Action, Timestamp,\nIP Address)
+System --> Admin: Display Audit Logs\n(Searchable Table)
+
+Admin -> System: View All Issues\n(All Departments)
+System -> DB: SELECT * FROM issues\nORDER BY created_at DESC
+DB --> System: All Issues\n(Cross-Department)
+System --> Admin: Display Issues\n(Read-Only View)
+
+Admin -> System: Add Comment to Issue\n(Issue ID, Comment)
+System -> DB: INSERT INTO issue_comments\n(issue_id, user_id, content)
+DB --> System: Comment Added
+System -> DB: INSERT notification\n(For Issue Owner)
+System --> Admin: Comment Added\nSuccessfully
+
+@enduml

@@ -1,0 +1,198 @@
+@startuml DQIMS_Activity_Authentication
+!theme plain
+skinparam activityBackgroundColor #E1F5FE
+skinparam activityBorderColor #0277BD
+skinparam activityStartColor #01579B
+skinparam activityEndColor #2E7D32
+
+title Activity Diagram: Authentication & Password Management
+
+|User|
+start
+:Open DQIMS Application;
+:Enter Email & Password;
+:Click "Login";
+
+|System|
+:Receive Login Request;
+:Validate Input Format;
+
+if (Format valid?) then (yes)
+  :Query User by Email;
+  
+  if (User exists?) then (yes)
+    if (User is Active?) then (yes)
+      :Verify Password Hash;
+      
+      if (Password correct?) then (yes)
+        :Generate JWT Token;
+        note right
+          Token contains:
+          - User ID
+          - Email
+          - Role
+          - Department
+          - Expiration time
+        end note
+        
+        :Create Audit Log;
+        note right
+          Action: "User Login"
+          IP Address
+          User Agent
+        end note
+        
+        if (isFirstLogin = true?) then (yes)
+          |User|
+          :Redirect to Change Password;
+          
+          partition "First Login Password Change" {
+            :Enter Current Password;
+            :Enter New Password;
+            :Confirm New Password;
+            
+            |System|
+            if (Passwords match?) then (yes)
+              if (Password meets requirements?) then (yes)
+                note right
+                  Requirements:
+                  - Min 8 characters
+                  - Not in password history
+                end note
+                
+                :Hash New Password;
+                :Update User Record;
+                :Set isFirstLogin = false;
+                :Save to Password History;
+                :Create Audit Log;
+                
+                |User|
+                :Display Success Message;
+                :Redirect to Dashboard;
+              else (no)
+                :Display Password Requirements;
+                stop
+              endif
+            else (no)
+              :Display Mismatch Error;
+              stop
+            endif
+          }
+        else (no)
+          |User|
+          :Redirect to Dashboard;
+        endif
+        
+        :Access System Features;
+        stop
+        
+      else (no - Wrong Password)
+        |User|
+        :Display Error;
+        note right
+          "Invalid email or password"
+        end note
+        stop
+      endif
+      
+    else (no - Inactive User)
+      |User|
+      :Display Error;
+      note right
+        "Account is deactivated.
+        Contact administrator."
+      end note
+      stop
+    endif
+    
+  else (no - User Not Found)
+    |User|
+    :Display Error;
+    note right
+      "Invalid email or password"
+    end note
+    stop
+  endif
+  
+else (no)
+  |User|
+  :Display Validation Errors;
+  stop
+endif
+
+' Forgot Password Flow
+|User|
+floating note right: Forgot Password Flow
+:Click "Forgot Password";
+:Enter Email Address;
+:Click "Send Reset Link";
+
+|System|
+:Validate Email;
+
+if (User exists?) then (yes)
+  :Generate Reset Token;
+  note right
+    - Random UUID
+    - 1 hour expiration
+  end note
+  
+  :Save Token to User Record;
+  :Create Reset Link;
+  
+  :Send Password Reset Email;
+  note right
+    Subject: "Password Reset Request"
+    Content: Reset link with token
+  end note
+  
+  |User|
+  :Display Success Message;
+  :Check Email;
+  :Click Reset Link;
+  
+  |System|
+  :Validate Token;
+  
+  if (Token valid & not expired?) then (yes)
+    |User|
+    :Enter New Password;
+    :Confirm New Password;
+    
+    |System|
+    if (Password valid?) then (yes)
+      :Hash New Password;
+      :Update User Record;
+      :Clear Reset Token;
+      :Save to Password History;
+      :Create Audit Log;
+      
+      :Send Confirmation Email;
+      
+      |User|
+      :Display Success Message;
+      :Redirect to Login;
+      stop
+    else (no)
+      :Display Password Requirements;
+      stop
+    endif
+  else (no)
+    |User|
+    :Display Error;
+    note right
+      "Reset link expired or invalid"
+    end note
+    stop
+  endif
+else (no)
+  |User|
+  :Display Generic Message;
+  note right
+    "If email exists, reset link sent"
+    (Security: Don't reveal if email exists)
+  end note
+  stop
+endif
+
+@enduml

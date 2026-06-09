@@ -1,0 +1,713 @@
+@startuml DQIMS_Complete_Class_Diagram
+!theme plain
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FFFFFF
+skinparam class {
+    BackgroundColor #F8F9FA
+    BorderColor #20603D
+    ArrowColor #20603D
+    FontSize 11
+    FontName Arial
+}
+
+title DQIMS (Data Quality Issues Management System)\nComplete Class Diagram - Rwanda Revenue Authority\n
+
+' ===================================================================
+' CORE ENTITIES
+' ===================================================================
+
+package "Core Domain" #E8F5E9 {
+    
+    class Department {
+        - id: UUID <<PK>>
+        - deptCode: String <<unique>>
+        - deptName: String
+        - description: String
+        - isActive: Boolean
+        - createdAt: DateTime
+        - updatedAt: DateTime
+        --
+        + getDeptCode(): String
+        + setDeptCode(code: String): void
+        + activate(): void
+        + deactivate(): void
+    }
+
+    class User {
+        - id: UUID <<PK>>
+        - employeeId: String <<unique>>
+        - email: String <<unique>>
+        - passwordHash: String
+        - fullName: String
+        - role: String
+        - department: Department <<FK>>
+        - phone: String
+        - isActive: Boolean
+        - lastLogin: DateTime
+        - createdAt: DateTime
+        - updatedAt: DateTime
+        --
+        + login(password: String): Boolean
+        + changePassword(oldPass: String, newPass: String): Boolean
+        + hasRole(role: String): Boolean
+        + isAdmin(): Boolean
+        + isHOD(): Boolean
+        + canAssignIssues(): Boolean
+        + getFullName(): String
+    }
+
+    class IssueCategory {
+        - id: UUID <<PK>>
+        - categoryCode: String <<unique>>
+        - categoryName: String
+        - description: String
+        - severityLevel: String
+        - colorCode: String
+        - isActive: Boolean
+        - createdAt: DateTime
+        - updatedAt: DateTime
+        --
+        + getCategoryName(): String
+        + getColorCode(): String
+        + getSeverityLevel(): String
+    }
+
+    class Issue {
+        - id: UUID <<PK>>
+        - issueNumber: String <<unique>>
+        - title: String
+        - description: String
+        - category: IssueCategory <<FK>>
+        - severity: String
+        - priority: String
+        - dataSource: String
+        - affectedRecords: Integer
+        - dataField: String
+        - reportedBy: User <<FK>>
+        - assignedTo: User <<FK>>
+        - department: Department <<FK>>
+        - status: String
+        - slaDueDate: DateTime
+        - slaStatus: String
+        - resolutionNotes: String
+        - resolvedAt: DateTime
+        - resolvedBy: User <<FK>>
+        - isDuplicate: Boolean
+        - duplicateOf: Issue <<FK>>
+        - attachments: JSON
+        - tags: String[]
+        - createdAt: DateTime
+        - updatedAt: DateTime
+        --
+        + assign(user: User): void
+        + updateStatus(status: String): void
+        + resolve(notes: String, user: User): void
+        + close(): void
+        + addComment(comment: IssueComment): void
+        + calculateSLA(): void
+        + updateSLAStatus(): void
+        + checkSLABreach(): Boolean
+        + markAsDuplicate(originalIssue: Issue): void
+        + addTag(tag: String): void
+        + getAgeInHours(): Double
+    }
+
+    class IssueComment {
+        - id: UUID <<PK>>
+        - issue: Issue <<FK>>
+        - user: User <<FK>>
+        - commentText: String
+        - isInternal: Boolean
+        - attachments: JSON
+        - createdAt: DateTime
+        - updatedAt: DateTime
+        --
+        + edit(newText: String): void
+        + delete(): void
+        + isEditableBy(user: User): Boolean
+    }
+
+    class RelatedIssue {
+        - id: UUID <<PK>>
+        - issue: Issue <<FK>>
+        - relatedIssue: Issue <<FK>>
+        - relationshipType: String
+        - notes: String
+        - createdBy: User <<FK>>
+        - createdAt: DateTime
+        --
+        + getRelationshipType(): String
+        + isDuplicate(): Boolean
+        + isBlocking(): Boolean
+    }
+
+    class IssueHistory {
+        - id: UUID <<PK>>
+        - issue: Issue <<FK>>
+        - changedBy: User <<FK>>
+        - changeType: String
+        - fieldName: String
+        - oldValue: String
+        - newValue: String
+        - changeDescription: String
+        - createdAt: DateTime
+        --
+        + getChangeDescription(): String
+        + getFormattedDate(): String
+    }
+}
+
+' ===================================================================
+' DATA VALIDATION ENTITIES
+' ===================================================================
+
+package "Data Validation" #E3F2FD {
+    
+    class DataValidationRule {
+        - id: UUID <<PK>>
+        - ruleCode: String <<unique>>
+        - ruleName: String
+        - description: String
+        - dataSource: String
+        - fieldName: String
+        - validationType: String
+        - ruleLogic: String
+        - severity: String
+        - isActive: Boolean
+        - createdBy: User <<FK>>
+        - createdAt: DateTime
+        - updatedAt: DateTime
+        --
+        + execute(): ValidationExecution
+        + validate(record: Object): Boolean
+        + activate(): void
+        + deactivate(): void
+        + getValidationType(): String
+    }
+
+    class DataValidationExecution {
+        - id: UUID <<PK>>
+        - executionNumber: String <<unique>>
+        - rule: DataValidationRule <<FK>>
+        - executedBy: User <<FK>>
+        - executionStatus: String
+        - totalRecordsChecked: Integer
+        - recordsPassed: Integer
+        - recordsFailed: Integer
+        - passRate: Double
+        - startedAt: DateTime
+        - completedAt: DateTime
+        - executionTimeSeconds: Integer
+        - errorMessage: String
+        - createdAt: DateTime
+        --
+        + start(): void
+        + complete(): void
+        + fail(error: String): void
+        + calculatePassRate(): Double
+        + addFailure(failure: ValidationFailure): void
+        + createIssuesFromFailures(): List<Issue>
+    }
+
+    class DataValidationFailure {
+        - id: UUID <<PK>>
+        - execution: DataValidationExecution <<FK>>
+        - rule: DataValidationRule <<FK>>
+        - recordIdentifier: String
+        - fieldName: String
+        - actualValue: String
+        - expectedValue: String
+        - failureReason: String
+        - issueCreated: Boolean
+        - issue: Issue <<FK>>
+        - createdAt: DateTime
+        --
+        + createIssue(): Issue
+        + getFailureReason(): String
+    }
+}
+
+' ===================================================================
+' ANALYSIS ENTITIES
+' ===================================================================
+
+package "Analysis & Reporting" #FFF3E0 {
+    
+    class RootCauseAnalysis {
+        - id: UUID <<PK>>
+        - issue: Issue <<FK>>
+        - analysisMethod: String
+        - why1: String
+        - why2: String
+        - why3: String
+        - why4: String
+        - why5: String
+        - rootCause: String
+        - peopleFactors: String
+        - processFactors: String
+        - technologyFactors: String
+        - environmentFactors: String
+        - materialFactors: String
+        - measurementFactors: String
+        - correctiveActions: String
+        - preventiveActions: String
+        - analyzedBy: User <<FK>>
+        - analyzedAt: DateTime
+        - reviewedBy: User <<FK>>
+        - reviewedAt: DateTime
+        - status: String
+        - createdAt: DateTime
+        - updatedAt: DateTime
+        --
+        + submitForReview(): void
+        + approve(reviewer: User): void
+        + reject(reviewer: User, reason: String): void
+        + use5Whys(): void
+        + useFishbone(): void
+        + getRootCause(): String
+    }
+
+    class Report {
+        - id: UUID <<PK>>
+        - reportNumber: String <<unique>>
+        - reportName: String
+        - reportType: String
+        - description: String
+        - parameters: JSON
+        - generatedBy: User <<FK>>
+        - generatedAt: DateTime
+        - reportData: JSON
+        - fileUrl: String
+        - fileFormat: String
+        - department: Department <<FK>>
+        - isPublic: Boolean
+        - createdAt: DateTime
+        --
+        + generate(): void
+        + exportToPDF(): String
+        + exportToExcel(): String
+        + exportToCSV(): String
+        + share(users: List<User>): void
+    }
+
+    class DashboardMetric {
+        - id: UUID <<PK>>
+        - metricDate: Date
+        - department: Department <<FK>>
+        - totalIssues: Integer
+        - openIssues: Integer
+        - inProgressIssues: Integer
+        - resolvedIssues: Integer
+        - closedIssues: Integer
+        - slaOnTrack: Integer
+        - slaAtRisk: Integer
+        - slaBreached: Integer
+        - criticalIssues: Integer
+        - highIssues: Integer
+        - mediumIssues: Integer
+        - lowIssues: Integer
+        - validationPassRate: Double
+        - totalValidationsRun: Integer
+        - activeUsers: Integer
+        - newUsers: Integer
+        - createdAt: DateTime
+        --
+        + calculate(): void
+        + getTotalIssues(): Integer
+        + getSLACompliance(): Double
+    }
+}
+
+' ===================================================================
+' SYSTEM & COMPLIANCE ENTITIES
+' ===================================================================
+
+package "System & Compliance" #FCE4EC {
+    
+    class AuditLog {
+        - id: UUID <<PK>>
+        - user: User <<FK>>
+        - actionType: String
+        - moduleName: String
+        - entityType: String
+        - entityId: UUID
+        - actionDescription: String
+        - oldValues: JSON
+        - newValues: JSON
+        - ipAddress: String
+        - userAgent: String
+        - sessionId: String
+        - actionResult: String
+        - errorMessage: String
+        - createdAt: DateTime
+        --
+        + log(action: String): void
+        + getActionDescription(): String
+        + getFormattedTimestamp(): String
+        + isSuccessful(): Boolean
+    }
+
+    class Notification {
+        - id: UUID <<PK>>
+        - user: User <<FK>>
+        - notificationType: String
+        - title: String
+        - message: String
+        - relatedEntityType: String
+        - relatedEntityId: UUID
+        - priority: String
+        - isRead: Boolean
+        - readAt: DateTime
+        - createdAt: DateTime
+        --
+        + markAsRead(): void
+        + markAsUnread(): void
+        + send(): void
+        + getFormattedMessage(): String
+    }
+
+    class SLAConfiguration {
+        - id: UUID <<PK>>
+        - slaName: String
+        - severity: String
+        - priority: String
+        - category: IssueCategory <<FK>>
+        - department: Department <<FK>>
+        - responseTimeHours: Integer
+        - resolutionTimeHours: Integer
+        - warningThresholdHours: Integer
+        - useBusinessHoursOnly: Boolean
+        - isActive: Boolean
+        - createdAt: DateTime
+        - updatedAt: DateTime
+        --
+        + calculateDueDate(issue: Issue): DateTime
+        + isBreached(issue: Issue): Boolean
+        + isAtRisk(issue: Issue): Boolean
+        + getResolutionTime(): Integer
+    }
+
+    class SystemSetting {
+        - id: UUID <<PK>>
+        - settingKey: String <<unique>>
+        - settingValue: String
+        - settingType: String
+        - description: String
+        - category: String
+        - isEditable: Boolean
+        - updatedBy: User <<FK>>
+        - createdAt: DateTime
+        - updatedAt: DateTime
+        --
+        + getValue(): String
+        + setValue(value: String): void
+        + getAsBoolean(): Boolean
+        + getAsInteger(): Integer
+    }
+}
+
+' ===================================================================
+' INTEGRATION ENTITIES
+' ===================================================================
+
+package "Integration" #F3E5F5 {
+    
+    class Integration {
+        - id: UUID <<PK>>
+        - integrationName: String
+        - integrationType: String
+        - description: String
+        - endpointUrl: String
+        - authType: String
+        - credentials: JSON
+        - configParameters: JSON
+        - syncFrequency: String
+        - lastSyncAt: DateTime
+        - nextSyncAt: DateTime
+        - isActive: Boolean
+        - status: String
+        - lastError: String
+        - createdBy: User <<FK>>
+        - createdAt: DateTime
+        - updatedAt: DateTime
+        --
+        + sync(): void
+        + test(): Boolean
+        + activate(): void
+        + deactivate(): void
+        + updateCredentials(creds: JSON): void
+    }
+
+    class IntegrationLog {
+        - id: UUID <<PK>>
+        - integration: Integration <<FK>>
+        - syncStatus: String
+        - startedAt: DateTime
+        - completedAt: DateTime
+        - recordsProcessed: Integer
+        - recordsSuccess: Integer
+        - recordsFailed: Integer
+        - errorMessage: String
+        - syncDetails: JSON
+        - createdAt: DateTime
+        --
+        + getSuccessRate(): Double
+        + getDuration(): Long
+        + hasFailed(): Boolean
+    }
+
+    class Attachment {
+        - id: UUID <<PK>>
+        - entityType: String
+        - entityId: UUID
+        - fileName: String
+        - fileType: String
+        - fileSize: Integer
+        - filePath: String
+        - uploadedBy: User <<FK>>
+        - createdAt: DateTime
+        --
+        + download(): InputStream
+        + delete(): void
+        + getFormattedSize(): String
+    }
+}
+
+' ===================================================================
+' ENUMERATIONS
+' ===================================================================
+
+enum UserRole {
+    ADMIN
+    HOD
+    SECRETARY
+    MEMBER
+}
+
+enum IssueSeverity {
+    CRITICAL
+    HIGH
+    MEDIUM
+    LOW
+}
+
+enum IssuePriority {
+    CRITICAL
+    HIGH
+    MEDIUM
+    LOW
+}
+
+enum IssueStatus {
+    OPEN
+    IN_PROGRESS
+    PENDING
+    RESOLVED
+    CLOSED
+    REJECTED
+}
+
+enum SLAStatus {
+    ON_TRACK
+    AT_RISK
+    BREACHED
+}
+
+enum ValidationType {
+    FORMAT
+    RANGE
+    CONSISTENCY
+    COMPLETENESS
+    UNIQUENESS
+    REFERENTIAL_INTEGRITY
+    BUSINESS_RULE
+}
+
+enum ExecutionStatus {
+    RUNNING
+    COMPLETED
+    FAILED
+}
+
+enum AnalysisMethod {
+    FIVE_WHYS
+    FISHBONE
+    PARETO
+    FAULT_TREE
+}
+
+enum RCAStatus {
+    DRAFT
+    PENDING_REVIEW
+    APPROVED
+    REJECTED
+}
+
+enum ReportType {
+    ISSUE_SUMMARY
+    DEPARTMENT_PERFORMANCE
+    SLA_COMPLIANCE
+    DATA_QUALITY_TRENDS
+    USER_ACTIVITY
+    CUSTOM
+}
+
+enum ActionType {
+    CREATE
+    UPDATE
+    DELETE
+    VIEW
+    LOGIN
+    LOGOUT
+    EXPORT
+    ASSIGN
+    APPROVE
+    REJECT
+}
+
+enum NotificationType {
+    ISSUE_ASSIGNED
+    ISSUE_UPDATED
+    SLA_WARNING
+    SLA_BREACHED
+    VALIDATION_COMPLETE
+    REPORT_READY
+    SYSTEM_ALERT
+}
+
+' ===================================================================
+' RELATIONSHIPS - CORE
+' ===================================================================
+
+Department "1" -- "0..*" User : has >
+Department "1" -- "0..*" Issue : owns >
+Department "1" -- "0..*" DashboardMetric : tracks >
+Department "1" -- "0..*" Report : generates >
+Department "1" -- "0..*" SLAConfiguration : configures >
+
+User "1" -- "0..*" Issue : reports >
+User "1" -- "0..*" Issue : assigned to >
+User "1" -- "0..*" Issue : resolves >
+User "1" -- "0..*" IssueComment : writes >
+User "1" -- "0..*" Notification : receives >
+User "1" -- "0..*" AuditLog : performs >
+User "1" -- "0..*" DataValidationRule : creates >
+User "1" -- "0..*" DataValidationExecution : executes >
+User "1" -- "0..*" RootCauseAnalysis : analyzes >
+User "1" -- "0..*" Report : generates >
+User "1" -- "0..*" Integration : configures >
+User "1" -- "0..*" Attachment : uploads >
+User "1" -- "0..*" RelatedIssue : links >
+User -- UserRole : has role
+
+IssueCategory "1" -- "0..*" Issue : categorizes >
+IssueCategory "1" -- "0..*" SLAConfiguration : defines >
+
+Issue "1" -- "0..*" IssueComment : has >
+Issue "1" -- "0..*" RelatedIssue : relates to >
+Issue "1" -- "0..1" RootCauseAnalysis : analyzes >
+Issue "1" -- "0..*" IssueHistory : tracks changes >
+Issue "1" -- "0..*" Attachment : attaches >
+Issue -- IssueSeverity : has severity
+Issue -- IssuePriority : has priority
+Issue -- IssueStatus : has status
+Issue -- SLAStatus : has SLA status
+Issue "0..1" -- "0..*" Issue : duplicate of >
+
+' ===================================================================
+' RELATIONSHIPS - DATA VALIDATION
+' ===================================================================
+
+DataValidationRule "1" -- "0..*" DataValidationExecution : executes >
+DataValidationRule -- ValidationType : has type
+
+DataValidationExecution "1" -- "0..*" DataValidationFailure : produces >
+DataValidationExecution -- ExecutionStatus : has status
+
+DataValidationFailure "0..1" -- "0..1" Issue : creates >
+
+' ===================================================================
+' RELATIONSHIPS - ANALYSIS
+' ===================================================================
+
+RootCauseAnalysis -- AnalysisMethod : uses method
+RootCauseAnalysis -- RCAStatus : has status
+
+Report -- ReportType : has type
+
+' ===================================================================
+' RELATIONSHIPS - SYSTEM & COMPLIANCE
+' ===================================================================
+
+AuditLog -- ActionType : logs action
+
+Notification -- NotificationType : has type
+
+' ===================================================================
+' RELATIONSHIPS - INTEGRATION
+' ===================================================================
+
+Integration "1" -- "0..*" IntegrationLog : logs >
+
+' ===================================================================
+' NOTES
+' ===================================================================
+
+note top of Department
+  Represents RRA departments:
+  - IT, Domestic Tax, Customs, etc.
+  - Used for data filtering
+end note
+
+note top of User
+  User roles determine access:
+  - ADMIN: Full system access
+  - HOD: Department management
+  - SECRETARY: Department data entry
+  - MEMBER: Assigned issues only
+end note
+
+note top of Issue
+  Core entity of the system.
+  Tracks issue lifecycle from
+  creation to resolution.
+end note
+
+note bottom of AuditLog
+  Immutable audit trail.
+  Records all system actions
+  for compliance.
+end note
+
+note bottom of DataValidationRule
+  Defines automated data
+  quality checks.
+end note
+
+note right of RootCauseAnalysis
+  Supports 5 Whys and
+  Fishbone analysis methods.
+end note
+
+' ===================================================================
+' LEGEND
+' ===================================================================
+
+legend right
+  |= Symbol |= Meaning |
+  | <<PK>> | Primary Key |
+  | <<FK>> | Foreign Key |
+  | <<unique>> | Unique Constraint |
+  | 1 -- 0..* | One to Many |
+  | 0..1 -- 0..1 | Zero or One to Zero or One |
+  
+  <b>Package Colors:</b>
+  Core Domain (Green): Main business entities
+  Data Validation (Blue): Validation system
+  Analysis (Orange): Analytics & RCA
+  System (Pink): Compliance & Config
+  Integration (Purple): External systems
+endlegend
+
+@enduml

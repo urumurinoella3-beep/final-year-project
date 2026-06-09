@@ -1,0 +1,96 @@
+@startuml DQIMS_Activity_IssueResolution
+!theme plain
+skinparam activityBackgroundColor #E3F2FD
+skinparam activityBorderColor #2196F3
+skinparam activityStartColor #1565C0
+skinparam activityEndColor #2E7D32
+
+title Activity Diagram: Issue Resolution Workflow
+
+|Staff|
+start
+:Login to System;
+:View Assigned Issues;
+
+:Click on Issue;
+
+|System|
+if (Issue Status = OPEN?) then (yes)
+  :Auto-change Status to IN_PROGRESS;
+  :Update timestamp;
+  :Create Audit Log;
+  :Create Notification;
+endif
+
+|Staff|
+:View Issue Details;
+:Read Description & Attachments;
+
+:Work on Issue Resolution;
+note right
+  Staff investigates and
+  resolves the data quality issue
+end note
+
+:Add Progress Comments;
+
+repeat
+  :Perform Resolution Actions;
+  :Document Progress;
+  :Add Comments;
+repeat while (Issue Resolved?) is (no)
+->yes;
+
+:Click "Mark as Resolved";
+
+|System|
+:Update Issue Status = RESOLVED;
+:Set resolvedAt = Current Time;
+:Create Audit Log;
+
+:Create Notification for HOD;
+note right
+  Type: STATUS_UPDATED
+  Message: "Issue marked as resolved"
+end note
+
+:Send Email to HOD;
+
+|HOD|
+:Receive Notification;
+:Review Resolved Issue;
+
+if (Resolution Acceptable?) then (yes)
+  :Click "Close Issue";
+  
+  |System|
+  :Update Status = CLOSED;
+  :Set closedAt = Current Time;
+  :Set closedBy = HOD;
+  :Create Audit Log;
+  :Create Notification for Staff;
+  
+  |HOD|
+  :Display Success Message;
+  
+  |Staff|
+  :Receive Closure Notification;
+  stop
+  
+else (no - Needs More Work)
+  :Click "Reopen Issue";
+  
+  |System|
+  :Update Status = IN_PROGRESS;
+  :Clear resolvedAt timestamp;
+  :Create Audit Log;
+  :Create Notification for Staff;
+  :Add HOD Comment;
+  
+  |Staff|
+  :Receive Reopen Notification;
+  :Continue Working on Issue;
+  stop
+endif
+
+@enduml

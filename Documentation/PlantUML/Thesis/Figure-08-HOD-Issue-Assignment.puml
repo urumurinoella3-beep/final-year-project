@@ -1,0 +1,126 @@
+@startuml
+title Figure 8: Head of Department - Issue Assignment Process
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 11
+skinparam dpi 150
+skinparam sequenceMessageAlign center
+
+actor "Head of\nDepartment" as HOD
+participant "Frontend" as UI
+participant "Backend\nAPI" as API
+participant "Issue\nService" as IssueSvc
+participant "Notification\nService" as NotifSvc
+participant "Email\nService" as Email
+database "Database" as DB
+
+== View Department Issues ==
+
+HOD -> UI: Access Issues Page
+UI -> API: GET /api/issues/department\nAuthorization: Bearer {token}
+API -> DB: SELECT * FROM issues\nWHERE department = 'Finance'\nAND status IN ('OPEN', 'IN_PROGRESS')
+DB --> API: Issue List
+API --> UI: {issues[]}
+UI --> HOD: Display Issues Table\n(Unassigned & Assigned)
+
+== Assign Issue to Staff ==
+
+HOD -> UI: Click "Assign" on Issue
+UI --> HOD: Show Assignment Modal
+
+HOD -> UI: Request Staff List
+UI -> API: GET /api/users/department-staff
+API -> DB: SELECT * FROM users\nWHERE department = 'Finance'\nAND role = 'STAFF'\nAND isActive = true
+DB --> API: Staff List
+API --> UI: {staff[]}
+UI --> HOD: Display Staff Dropdown\n(John Kamanzi, Sarah Ingabire, etc.)
+
+HOD -> UI: Select Staff Member\n(John Kamanzi)
+HOD -> UI: Click "Assign"
+
+UI -> API: PUT /api/issues/{id}/assign\n{assignedToId: 201}
+
+API -> IssueSvc: assignIssue(issueId, staffId, hodId)
+
+IssueSvc -> DB: SELECT * FROM issues\nWHERE id = ?
+DB --> IssueSvc: Issue Details
+
+alt Issue Not Found
+    IssueSvc --> API: Error: Issue Not Found
+    API --> UI: 404 Not Found
+    UI --> HOD: Error: Issue Not Found
+else Issue Found
+    IssueSvc -> DB: SELECT * FROM users\nWHERE id = ? AND role = 'STAFF'
+    DB --> IssueSvc: Staff User
+    
+    alt Staff Not Found
+        IssueSvc --> API: Error: Staff Not Found
+        API --> UI: 404 Not Found
+        UI --> HOD: Error: Invalid Staff Member
+    else Staff Found
+        IssueSvc -> DB: UPDATE issues\nSET assigned_to = ?,\nupdated_at = NOW()\nWHERE id = ?
+        DB --> IssueSvc: Issue Updated
+        
+        IssueSvc -> DB: INSERT INTO audit_logs\n(user_id=HOD, action='ISSUE_ASSIGNED',\nentity_type='Issue', entity_id)
+        DB --> IssueSvc: Audit Log Created
+        
+        IssueSvc -> NotifSvc: createNotification()\n{userId=Staff, type='ISSUE_ASSIGNED',\ntitle, message, issueId}
+        NotifSvc -> DB: INSERT INTO notifications\n(user_id, type, title, message,\nissue_id, is_read=false)
+        DB --> NotifSvc: Notification Created
+        NotifSvc --> IssueSvc: Notification Sent
+        
+        IssueSvc -> Email: sendAssignmentEmail()\n{to: staff.email, issue: details}
+        Email -> Email: Build HTML Email\n(Issue Title, Priority, Link)
+        Email --> IssueSvc: Email Sent
+        
+        IssueSvc --> API: IssueResponse\n{assigned_to: John Kamanzi}
+        API --> UI: 200 OK
+        UI --> HOD: Success: Issue Assigned\nto John Kamanzi
+    end
+end
+
+== Change Issue Priority ==
+
+HOD -> UI: Click "Change Priority"
+UI --> HOD: Show Priority Modal\n(Low, Medium, High, Critical)
+
+HOD -> UI: Select Priority: "High"
+UI -> API: PUT /api/issues/{id}/priority\n{priority: "High"}
+
+API -> IssueSvc: updatePriority(issueId, priority)
+IssueSvc -> DB: UPDATE issues\nSET priority = 'High',\nupdated_at = NOW()
+DB --> IssueSvc: Priority Updated
+
+IssueSvc -> DB: INSERT INTO audit_logs\n(action='PRIORITY_CHANGED')
+IssueSvc -> NotifSvc: notifyPriorityChange()
+NotifSvc -> DB: INSERT notification\n(type='PRIORITY_CHANGED')
+
+IssueSvc --> API: Success
+API --> UI: 200 OK
+UI --> HOD: Priority Changed to High
+
+== Close Resolved Issue ==
+
+HOD -> UI: View Resolved Issues
+UI -> API: GET /api/issues/department?status=RESOLVED
+API -> DB: SELECT * FROM issues\nWHERE status = 'RESOLVED'
+DB --> API: Resolved Issues
+API --> UI: {issues[]}
+UI --> HOD: Display Resolved Issues
+
+HOD -> UI: Review Issue & Click "Close"
+UI -> API: PUT /api/issues/{id}/close
+
+API -> IssueSvc: closeIssue(issueId, hodId)
+IssueSvc -> DB: UPDATE issues\nSET status = 'CLOSED',\nclosed_by = ?, closed_at = NOW()
+DB --> IssueSvc: Issue Closed
+
+IssueSvc -> NotifSvc: notifyIssueClosed()
+NotifSvc -> DB: INSERT notification\n(type='ISSUE_CLOSED')
+NotifSvc -> Email: sendClosureEmail()
+
+IssueSvc --> API: Success
+API --> UI: 200 OK
+UI --> HOD: Issue Closed Successfully
+
+@enduml

@@ -1,0 +1,261 @@
+@startuml DQIMS_Activity_Data_Validation
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 10
+
+title <size:16><b>DQIMS - Data Validation Execution Activity Diagram</b></size>\n<size:12>Automated Data Quality Check Workflow</size>\n
+
+|#E8F5E9|User (HOD/Secretary)|
+start
+:Navigate to Data Validation Module;
+
+:View Validation Rules List;
+
+:Select Validation Rule;
+note right: e.g., "TIN Uniqueness Check"
+
+:Click "Run Validation" Button;
+
+:Configure Options:
+- Auto-create issues: YES/NO
+- Notification: YES/NO;
+
+:Click "Execute" Button;
+
+|#E3F2FD|System|
+:Receive Validation Request;
+
+:Validate User Permissions;
+
+if (User Authorized?) then (no)
+  :Return Error: Unauthorized;
+  |User (HOD/Secretary)|
+  stop
+else (yes)
+endif
+
+:Retrieve Validation Rule;
+
+if (Rule Active?) then (no)
+  :Return Error: Rule is Inactive;
+  |User (HOD/Secretary)|
+  stop
+else (yes)
+endif
+
+:Generate Execution Number;
+note right: VAL-2026-NNNN format
+
+:Create Execution Record:
+- status = RUNNING
+- executed_by = current user
+- started_at = now;
+
+:Save to Database;
+
+:Return Response: Execution Started;
+
+|User (HOD/Secretary)|
+:Display: "Validation Running...";
+
+:Show Progress Indicator;
+
+|#E3F2FD|Validation Engine|
+:Retrieve Rule Logic;
+
+if (Validation Type?) then (UNIQUENESS)
+  :Execute SQL Query:
+  SELECT field, COUNT(*)
+  GROUP BY field
+  HAVING COUNT(*) > 1;
+else if (FORMAT)
+  :Apply Regex Pattern
+  to Each Record;
+else if (RANGE)
+  :Check Value Boundaries;
+else if (COMPLETENESS)
+  :Check for NULL values;
+else if (CONSISTENCY)
+  :Validate Cross-field Logic;
+else (BUSINESS_RULE)
+  :Execute Custom Logic;
+endif
+
+:Initialize Counters:
+- total_checked = 0
+- passed = 0
+- failed = 0;
+
+repeat
+  :Fetch Next Record;
+  
+  :total_checked++;
+  
+  if (Record Passes Validation?) then (yes)
+    :passed++;
+  else (no)
+    :failed++;
+    
+    :Create Failure Record:
+    - record_identifier
+    - actual_value
+    - expected_value
+    - failure_reason;
+    
+    :Save to data_validation_failures;
+  endif
+  
+repeat while (More Records?) is (yes)
+->no;
+
+:Calculate Pass Rate:
+pass_rate = (passed / total) * 100;
+
+:Calculate Execution Time;
+
+:Update Execution Record:
+- status = COMPLETED
+- total_records_checked
+- records_passed
+- records_failed
+- pass_rate
+- completed_at = now
+- execution_time_seconds;
+
+if (Auto-Create Issues Enabled?) then (yes)
+  |#FFF3E0|Issue Creation Service|
+  
+  :Query All Failures for This Execution;
+  
+  if (Failures Count > 0?) then (yes)
+    
+    if (Failures Count > 100?) then (yes)
+      :Create ONE Summary Issue:
+      "Validation failed for X records";
+      note right
+        Avoid creating too many issues
+        Group into single summary issue
+      end note
+    else (no)
+      repeat
+        :Get Next Failure Record;
+        
+        :Check if Similar Issue Exists;
+        
+        if (Similar Issue Exists?) then (no)
+          :Create New Issue:
+          - category = VALIDATION
+          - severity = rule.severity
+          - title = failure.failure_reason
+          - description = failure details
+          - status = OPEN
+          - data_source = rule.data_source
+          - affected_records = 1;
+          
+          :Link Failure to Issue;
+          
+          :Set failure.issue_created = true;
+        else (yes)
+          :Update Existing Issue:
+          affected_records++;
+          
+          :Link Failure to Issue;
+        endif
+        
+      repeat while (More Failures?) is (yes)
+      ->no;
+    endif
+    
+    :Count Issues Created;
+    
+  endif
+endif
+
+|#E3F2FD|System|
+:Create Audit Log Entry;
+
+|#FFF3E0|Notification Service|
+fork
+  :Create In-App Notification;
+fork again
+  :Send Email to User:
+  "Validation Complete
+  Pass Rate: XX%
+  Failures: YYY";
+end fork
+
+|System|
+:Return Final Results:
+- execution_id
+- execution_number
+- pass_rate
+- failures_count
+- issues_created_count;
+
+|User (HOD/Secretary)|
+:Receive Completion Notification;
+
+:View Validation Results Page;
+
+:See Summary Statistics:
+- Total Checked: 15,234
+- Passed: 15,089
+- Failed: 145
+- Pass Rate: 99.05%;
+
+if (Want to View Failures?) then (yes)
+  :Click "View Failures" Button;
+  
+  :Display Failures Table:
+  - Record Identifier
+  - Field Name
+  - Actual Value
+  - Failure Reason
+  - Issue Created?;
+  
+  :Can Export to Excel/CSV;
+endif
+
+if (Want to View Created Issues?) then (yes)
+  :Click "View Issues" Link;
+  
+  :Redirect to Issues List;
+  
+  :Filter by: Created from Validation;
+endif
+
+:Validation Complete;
+
+stop
+
+legend right
+  <b>Validation Types:</b>
+  
+  <b>1. FORMAT</b>
+  Check field format (e.g., TIN is 9 digits)
+  
+  <b>2. RANGE</b>
+  Check value within bounds
+  
+  <b>3. CONSISTENCY</b>
+  Cross-field validation
+  
+  <b>4. COMPLETENESS</b>
+  Required fields not null
+  
+  <b>5. UNIQUENESS</b>
+  No duplicate values
+  
+  <b>6. REFERENTIAL_INTEGRITY</b>
+  Foreign key validation
+  
+  <b>7. BUSINESS_RULE</b>
+  Custom business logic
+  
+  <b>Auto-Issue Creation:</b>
+  • If failures < 100: Individual issues
+  • If failures >= 100: Summary issue
+  • Links failures to issues
+endlegend
+
+@enduml

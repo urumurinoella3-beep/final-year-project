@@ -1,0 +1,119 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    🚨 FIX FOR 404 LOGIN ERROR 🚨                             ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  PROBLEM: "Failed to load resource: the server responded with a status      ║
+║            of 404 ()"                                                        ║
+║                                                                              ║
+║  ROOT CAUSE: Backend Spring Boot server is NOT running                      ║
+║                                                                              ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                          ✅ THE SOLUTION                                     ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  STEP 1: Ensure PostgreSQL is Running                                       ║
+║  ────────────────────────────────────────                                   ║
+║  • Open Services (Win + R → services.msc)                                   ║
+║  • Find PostgreSQL → Start it                                               ║
+║                                                                              ║
+║  STEP 2: Create Database (First Time Only)                                  ║
+║  ────────────────────────────────────────────                               ║
+║  psql -U postgres                                                            ║
+║  CREATE DATABASE dqims_db;                                                   ║
+║  \q                                                                          ║
+║                                                                              ║
+║  STEP 3: Start Backend Server                                               ║
+║  ────────────────────────────────────                                       ║
+║  Double-click: start-backend.bat                                            ║
+║                                                                              ║
+║  OR manually:                                                                ║
+║  cd Backend\DQIMS                                                            ║
+║  mvnw.cmd spring-boot:run                                                    ║
+║                                                                              ║
+║  Wait for: "Started DqimsApplication in X.XXX seconds"                      ║
+║                                                                              ║
+║  STEP 4: Verify Backend is Running                                          ║
+║  ────────────────────────────────────────                                   ║
+║  Open browser: http://localhost:8080/actuator/health                        ║
+║  Should show: {"status":"UP"}                                               ║
+║                                                                              ║
+║  STEP 5: Login to Frontend                                                  ║
+║  ────────────────────────────────                                           ║
+║  URL:      http://localhost:5173                                            ║
+║  Email:    admin@rra.gov.rw                                                  ║
+║  Password: password                                                          ║
+║                                                                              ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                      📋 DEFAULT USER ACCOUNTS                                ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  All users have password: "password"                                         ║
+║                                                                              ║
+║  • admin@rra.gov.rw          (ADMIN, IT Department)                         ║
+║  • john.mugisha@rra.gov.rw   (HOD, VAT Department)                          ║
+║  • sarah.uwase@rra.gov.rw    (STAFF, CUSTOMS Department)                    ║
+║                                                                              ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                      📚 HELPFUL FILES CREATED                                ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  1. README_FIX_404.md              - Complete solution guide                ║
+║  2. QUICK_FIX.md                   - Ultra-quick reference                  ║
+║  3. START_HERE.md                  - Step-by-step startup guide             ║
+║  4. TROUBLESHOOTING_LOGIN_404.md   - Detailed troubleshooting               ║
+║  5. start-backend.bat              - One-click backend startup              ║
+║  6. start-frontend.bat             - One-click frontend startup             ║
+║                                                                              ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                      🔍 QUICK VERIFICATION                                   ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  ✓ PostgreSQL service running?                                              ║
+║  ✓ Database 'dqims_db' exists?                                              ║
+║  ✓ Backend console shows "Started DqimsApplication"?                        ║
+║  ✓ http://localhost:8080/actuator/health returns {"status":"UP"}?          ║
+║  ✓ Frontend accessible at http://localhost:5173?                            ║
+║                                                                              ║
+║  If all ✓, you're ready to login!                                           ║
+║                                                                              ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                      ⚡ QUICK TEST COMMAND                                   ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  curl -X POST http://localhost:8080/api/v1/auth/login ^                     ║
+║    -H "Content-Type: application/json" ^                                    ║
+║    -d "{\"email\":\"admin@rra.gov.rw\",\"password\":\"password\"}"          ║
+║                                                                              ║
+║  Should return: JWT token + user data                                       ║
+║                                                                              ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                      🎯 SYSTEM ARCHITECTURE                                  ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  Frontend (React)  ──────>  Backend (Spring Boot)  ──────>  PostgreSQL     ║
+║  localhost:5173             localhost:8080                  localhost:5432  ║
+║                             /api/v1/auth/login              dqims_db        ║
+║                                                                              ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                      ✅ WHAT WAS VERIFIED                                    ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  ✓ Backend code is correct (AuthController exists)                          ║
+║  ✓ Frontend code is correct (API calls are proper)                          ║
+║  ✓ Backend compiles successfully (no code errors)                           ║
+║  ✓ Maven is available (version 3.9.14)                                      ║
+║  ✓ Java is installed (version 26)                                           ║
+║  ✓ All dependencies are configured                                          ║
+║                                                                              ║
+║  ✗ Backend server is NOT running ← THIS IS THE ISSUE!                       ║
+║                                                                              ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                      🎉 FINAL NOTE                                           ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  The 404 error is simply the frontend trying to connect to a backend        ║
+║  that isn't running yet. Start the backend and everything will work!        ║
+║                                                                              ║
+║  Read README_FIX_404.md for the complete guide.                             ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝

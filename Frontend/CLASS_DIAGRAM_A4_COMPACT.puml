@@ -1,0 +1,193 @@
+@startuml DQIMS_Compact
+!theme plain
+skinparam linetype polyline
+skinparam nodesep 25
+skinparam ranksep 30
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+' Ultra-compact for A4 paper
+skinparam dpi 300
+skinparam defaultFontSize 7
+skinparam classFontSize 8
+
+skinparam class {
+    BackgroundColor<<C>> #E8F5E9
+    BackgroundColor<<V>> #E3F2FD
+    BackgroundColor<<A>> #FFF3E0
+    BackgroundColor<<S>> #FCE4EC
+    BackgroundColor<<I>> #F3E5F5
+    BorderColor #20603D
+    ArrowColor #00A1DE
+}
+
+title <b>DQIMS - Class Diagram (20 Entities)</b>\nData Quality Issues Management System - RRA
+
+' ============ CORE (7) ============
+class Department <<C>> {
+  id: UUID
+  deptCode: String
+  deptName: String
+}
+
+class User <<C>> {
+  id: UUID
+  employeeId: String
+  email: String
+  fullName: String
+  role: String
+}
+
+class IssueCategory <<C>> {
+  id: UUID
+  categoryCode: String
+  categoryName: String
+  severityLevel: String
+}
+
+class Issue <<C>> {
+  id: UUID
+  issueNumber: String
+  title: String
+  severity: String
+  status: String
+  slaDueDate: DateTime
+}
+
+class IssueComment <<C>> {
+  id: UUID
+  commentText: String
+  isInternal: Boolean
+}
+
+class RelatedIssue <<C>> {
+  id: UUID
+  relationshipType: String
+}
+
+class IssueHistory <<C>> {
+  id: UUID
+  fieldName: String
+  oldValue: String
+  newValue: String
+}
+
+' ============ VALIDATION (3) ============
+class DataValidationRule <<V>> {
+  id: UUID
+  ruleCode: String
+  ruleName: String
+  validationType: String
+}
+
+class DataValidationExecution <<V>> {
+  id: UUID
+  executionNumber: String
+  totalRecordsChecked: Integer
+  recordsFailed: Integer
+  passRate: Double
+}
+
+class DataValidationFailure <<V>> {
+  id: UUID
+  recordIdentifier: String
+  failureReason: String
+}
+
+' ============ ANALYSIS (3) ============
+class RootCauseAnalysis <<A>> {
+  id: UUID
+  analysisMethod: String
+  rootCause: String
+  correctiveActions: String
+}
+
+class Report <<A>> {
+  id: UUID
+  reportNumber: String
+  reportName: String
+  reportType: String
+}
+
+class DashboardMetric <<A>> {
+  id: UUID
+  metricDate: Date
+  totalIssues: Integer
+  openIssues: Integer
+}
+
+' ============ SYSTEM (4) ============
+class AuditLog <<S>> {
+  id: UUID
+  actionType: String
+  actionDescription: String
+  ipAddress: String
+}
+
+class Notification <<S>> {
+  id: UUID
+  notificationType: String
+  message: String
+  isRead: Boolean
+}
+
+class SLAConfiguration <<S>> {
+  id: UUID
+  severity: String
+  resolutionTimeHours: Integer
+}
+
+class SystemSetting <<S>> {
+  id: UUID
+  settingKey: String
+  settingValue: String
+}
+
+' ============ INTEGRATION (3) ============
+class Integration <<I>> {
+  id: UUID
+  integrationName: String
+  integrationType: String
+}
+
+class IntegrationLog <<I>> {
+  id: UUID
+  syncStatus: String
+  recordsProcessed: Integer
+}
+
+class Attachment <<I>> {
+  id: UUID
+  fileName: String
+  fileSize: Integer
+}
+
+' ============ RELATIONSHIPS ============
+Department "1" -- "*" User
+Department "1" -- "*" Issue
+User "1" -- "*" Issue
+IssueCategory "1" -- "*" Issue
+Issue "1" -- "*" IssueComment
+Issue "1" -- "*" RelatedIssue
+Issue "1" -- "*" IssueHistory
+Issue "1" -- "1" RootCauseAnalysis
+
+DataValidationRule "1" -- "*" DataValidationExecution
+DataValidationExecution "1" -- "*" DataValidationFailure
+DataValidationFailure "*" -- "1" Issue
+
+User "1" -- "*" Notification
+User "1" -- "*" AuditLog
+Department "1" -- "*" DashboardMetric
+User "1" -- "*" Report
+SLAConfiguration "1" -- "*" Issue
+Integration "1" -- "*" IntegrationLog
+Issue "1" -- "*" Attachment
+
+legend bottom
+<b>Legend:</b>
+C = Core (7) | V = Validation (3) | A = Analysis (3)
+S = System (4) | I = Integration (3) | <b>Total: 20</b>
+end legend
+
+@enduml
