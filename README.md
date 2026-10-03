@@ -1,453 +1,405 @@
-# 📊 DQIMS - Data Quality Issues Management System
+# DQIMS - Data Quality Issues Management System
 
-**Final Year Project - Rwanda Revenue Authority**
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Java](https://img.shields.io/badge/Java-17-orange)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/React-18-blue)](https://reactjs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue)](https://www.postgresql.org/)
 
-A comprehensive web-based system for tracking, managing, and resolving data quality issues across organizational departments.
-
----
+A comprehensive web-based system for managing data quality issues at Rwanda Revenue Authority (RRA). Built with Spring Boot backend and React frontend, featuring role-based access control, real-time notifications, and comprehensive reporting.
 
 ## 🎯 Project Overview
 
-DQIMS is an enterprise-grade issue management system specifically designed for tracking and resolving data quality problems within the Rwanda Revenue Authority (RRA). The system provides role-based access control, real-time notifications, comprehensive audit trails, and advanced reporting capabilities.
+DQIMS is a Final Year Project that provides a robust platform for identifying, tracking, and resolving data quality issues within an organization. The system supports three user roles (Admin, HOD, and Staff) with distinct permissions and workflows.
 
 ### Key Features
 
-- ✅ **Role-Based Access Control** - Admin, HOD, and Staff roles with appropriate permissions
-- ✅ **Issue Lifecycle Management** - Create, assign, track, and resolve data quality issues
-- ✅ **Department Management** - Organized by RRA departments (Finance, Tax, Customs, IT, HR)
-- ✅ **Dual-Channel Notifications** - In-system notifications + professional email alerts
-- ✅ **Real-time Comments** - Collaborative issue resolution with comment threads
-- ✅ **Comprehensive Audit Trail** - Track all system activities with detailed logs
-- ✅ **Advanced Reporting** - Generate professional Excel reports with filters
-- ✅ **Priority Management** - HIGH, MEDIUM, LOW priority levels
-- ✅ **Status Tracking** - OPEN → IN_PROGRESS → RESOLVED → CLOSED workflow
+- **Role-Based Access Control**: Admin, Head of Department (HOD), and Staff roles with specific permissions
+- **Issue Management**: Complete lifecycle tracking from creation to resolution
+- **Data Validation**: CSV file upload and validation with error reporting
+- **Real-Time Notifications**: Email and in-system notifications for issue updates
+- **Comprehensive Reporting**: Excel and Word reports with statistics and audit trails
+- **Department Management**: Organize issues by department with HOD oversight
+- **Audit Logging**: Complete activity tracking for accountability
+- **Responsive UI**: Modern, professional interface built with React and Tailwind CSS
 
----
+## 📸 Screenshots
+
+*Coming soon - Add screenshots of your application here*
 
 ## 🏗️ System Architecture
 
 ### Technology Stack
 
 #### Backend
-- **Framework**: Spring Boot 3.2.5
+- **Framework**: Spring Boot 3.x
 - **Language**: Java 17
 - **Database**: PostgreSQL 15
-- **Security**: Spring Security + JWT Authentication
-- **Email**: Spring Mail (Gmail SMTP)
-- **Migration**: Flyway
-- **Build Tool**: Maven
-- **API**: RESTful APIs with comprehensive endpoints
+- **Security**: Spring Security with JWT
+- **Email**: JavaMail API
+- **Reporting**: Apache POI (Excel & Word)
 
 #### Frontend
 - **Framework**: React 18
 - **Language**: TypeScript
+- **Build Tool**: Vite
 - **Styling**: Tailwind CSS
-- **Icons**: Lucide React
 - **HTTP Client**: Axios
 - **Routing**: React Router v6
-- **Build Tool**: Vite
 
-#### Additional Tools
-- **Documentation**: PlantUML diagrams
-- **Version Control**: Git
-- **API Testing**: Postman/Insomnia compatible
+### Architecture Pattern
+- **Backend**: Layered architecture (Controller → Service → Repository → Entity)
+- **Frontend**: Component-based architecture with context API for state management
+- **Database**: Relational database with proper foreign key relationships
 
----
-
-## 📁 Project Structure
-
-```
-Final Year Project/
-├── Backend/
-│   └── DQIMS/
-│       ├── src/
-│       │   ├── main/
-│       │   │   ├── java/rw/rra/dqims/
-│       │   │   │   ├── config/          # Configuration classes
-│       │   │   │   ├── controller/      # REST controllers
-│       │   │   │   ├── dto/            # Data transfer objects
-│       │   │   │   ├── entity/         # JPA entities
-│       │   │   │   ├── exception/      # Exception handlers
-│       │   │   │   ├── repository/     # Data repositories
-│       │   │   │   ├── security/       # Security configuration
-│       │   │   │   ├── service/        # Business logic
-│       │   │   │   └── util/           # Utility classes
-│       │   │   └── resources/
-│       │   │       ├── db/migration/   # Flyway migrations
-│       │   │       └── application.properties
-│       │   └── test/                   # Unit tests
-│       ├── pom.xml                     # Maven dependencies
-│       └── Documentation/              # API & system docs
-│
-├── Frontend/
-│   └── dqims-app/
-│       ├── src/
-│       │   ├── components/            # React components
-│       │   ├── contexts/             # Context providers
-│       │   ├── pages/                # Page components
-│       │   ├── services/             # API services
-│       │   ├── types/                # TypeScript types
-│       │   └── utils/                # Utility functions
-│       ├── public/                   # Static assets
-│       ├── package.json              # Dependencies
-│       └── vite.config.ts            # Vite configuration
-│
-└── Documentation/
-    ├── Database/                     # Database schemas
-    ├── PlantUML/                     # Architecture diagrams
-    ├── API-Documentation.md
-    ├── Database-Schema.md
-    └── Project-Overview.md
-```
-
----
-
-## 🚀 Getting Started
+## 📦 Installation & Setup
 
 ### Prerequisites
 
-- **Java**: JDK 17 or higher
-- **Node.js**: v18 or higher
-- **PostgreSQL**: v15 or higher
-- **Maven**: 3.8+ (included via wrapper)
-- **Git**: For version control
+- **Java Development Kit (JDK) 17+**
+- **Node.js 18+ and npm**
+- **PostgreSQL 15+**
+- **Git**
+- **Maven** (included with Spring Boot)
 
-### 1️⃣ Database Setup
+### Backend Setup
 
-```sql
--- Create database
-CREATE DATABASE dqims_db;
-
--- Create user (optional)
-CREATE USER dqims_user WITH PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE dqims_db TO dqims_user;
+1. **Clone the repository**
+```bash
+git clone https://github.com/urumurinoella3-beep/final-year-project.git
+cd final-year-project
 ```
 
-### 2️⃣ Backend Setup
+2. **Set up PostgreSQL database**
+```sql
+CREATE DATABASE dqims_db;
+CREATE USER postgres WITH PASSWORD 'noella@090';
+GRANT ALL PRIVILEGES ON DATABASE dqims_db TO postgres;
+```
 
+3. **Import database schema and seed data**
+```bash
+# Navigate to database package
+cd Database-Transfer-Package
+
+# Import schema (using psql or pgAdmin)
+psql -U postgres -d dqims_db -f COMPLETE-DATABASE-SCHEMA.sql
+
+# Import seed data
+psql -U postgres -d dqims_db -f SEED-DATA.sql
+```
+
+4. **Configure backend application**
+
+Create `Backend/DQIMS/src/main/resources/application.properties`:
+```properties
+# Database Configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/dqims_db
+spring.datasource.username=postgres
+spring.datasource.password=noella@090
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+# Server Port
+server.port=8080
+
+# JWT Configuration
+jwt.secret=your-secret-key-here-make-it-long-and-secure
+jwt.expiration=86400000
+
+# Email Configuration (Optional - for notifications)
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=your-email@gmail.com
+spring.mail.password=your-app-password
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+```
+
+5. **Run the backend**
 ```bash
 cd Backend/DQIMS
-
-# Configure application.properties
-# Edit src/main/resources/application.properties:
-# - Database credentials
-# - Email credentials (for notifications)
-# - JWT secret
-
-# Build and run
-./mvnw spring-boot:run
-
-# Or on Windows
-.\mvnw spring-boot:run
+mvn clean install
+mvn spring-boot:run
 ```
 
-The backend will start on **http://localhost:8080**
+Backend will start on `http://localhost:8080`
 
-### 3️⃣ Frontend Setup
+### Frontend Setup
 
+1. **Install dependencies**
 ```bash
-cd Frontend/dqims-app
-
-# Install dependencies
+cd Frontend
 npm install
+```
 
-# Start development server
+2. **Configure API endpoint** (if needed)
+
+The frontend is already configured to connect to `http://localhost:8080`. If your backend runs on a different port, update the API base URL in `src/app/context/AuthContext.tsx`.
+
+3. **Run the frontend**
+```bash
 npm run dev
 ```
 
-The frontend will start on **http://localhost:5173**
+Frontend will start on `http://localhost:5173`
 
----
+## 👥 Default Users
 
-## 🔐 Default User Accounts
-
-After running Flyway migrations and data seeding, the following test accounts are available:
+After importing the seed data, you can log in with these credentials:
 
 | Role | Email | Password | Department |
 |------|-------|----------|------------|
-| **Admin** | admin@rra.gov.rw | Admin@123 | IT |
-| **HOD** | hod.finance@rra.gov.rw | Hod@123 | Finance |
-| **HOD** | hod.tax@rra.gov.rw | Hod@123 | Tax |
-| **Staff** | staff1@rra.gov.rw | Staff@123 | Finance |
-| **Staff** | staff2@rra.gov.rw | Staff@123 | Tax |
+| **Admin** | admin@rra.gov.rw | password | - |
+| **HOD (IT)** | hod.it@rra.gov.rw | password | IT |
+| **HOD (VAT)** | hod.vat@rra.gov.rw | password | VAT |
+| **Staff (IT)** | john.mugabo@rra.gov.rw | password | IT |
+| **Staff (VAT)** | staff.vat@rra.gov.rw | password | VAT |
 
-⚠️ **Important**: Change these passwords in production!
-
----
-
-## 📧 Email Notification Setup
-
-The system uses Gmail SMTP for sending email notifications. To configure:
-
-1. Create a Gmail account or use existing
-2. Enable 2-Step Verification
-3. Generate an App Password
-4. Update `application.properties`:
-
-```properties
-spring.mail.username=your-email@gmail.com
-spring.mail.password=your-app-password
-app.mail.from=your-email@gmail.com
-```
-
-### Notification Features
-- ✅ Welcome emails with temporary passwords
-- ✅ Issue assignment notifications
-- ✅ Status change alerts
-- ✅ Comment notifications
-- ✅ Password reset emails
-- ✅ Account update confirmations
-
----
-
-## 🎨 User Roles & Permissions
-
-### 👨‍💼 Admin
-- Full system access
-- Create/manage users
-- View all issues across departments
-- Generate system-wide reports
-- Access audit logs
-- System configuration
-
-### 👔 Head of Department (HOD)
-- View all issues in their department
-- Assign issues to staff members
-- Change issue priority and status
-- Generate department reports
-- Approve issue resolutions
-
-### 👤 Staff
-- Create new issues
-- View assigned issues
-- Update issue progress
-- Add comments and attachments
-- Mark issues as resolved
-
----
-
-## 📊 API Endpoints
-
-### Authentication
-```
-POST   /api/auth/login              # User login
-POST   /api/auth/forgot-password    # Request password reset
-POST   /api/auth/reset-password     # Reset password
-PUT    /api/auth/change-password    # Change password
-GET    /api/auth/me                 # Get current user
-```
-
-### Users
-```
-GET    /api/users                   # List all users
-POST   /api/users                   # Create user (Admin)
-GET    /api/users/{id}              # Get user details
-PUT    /api/users/{id}              # Update user (Admin)
-DELETE /api/users/{id}              # Deactivate user (Admin)
-GET    /api/users/department/{dept} # Users by department
-```
-
-### Issues
-```
-GET    /api/issues                  # List issues (paginated)
-POST   /api/issues                  # Create issue
-GET    /api/issues/{id}             # Get issue details
-PUT    /api/issues/{id}             # Update issue
-DELETE /api/issues/{id}             # Delete issue (soft)
-POST   /api/issues/{id}/comments    # Add comment
-GET    /api/issues/{id}/comments    # Get comments
-```
-
-### Notifications
-```
-GET    /api/notifications           # Get my notifications
-PUT    /api/notifications/{id}/read # Mark as read
-PUT    /api/notifications/read-all  # Mark all as read
-```
-
-### Reports
-```
-GET    /api/reports/export          # Export Excel report
-GET    /api/reports/summary         # Dashboard summary
-```
-
-### Audit Logs
-```
-GET    /api/audit-logs              # System audit trail (Admin)
-```
-
----
-
-## 🗄️ Database Schema
-
-### Core Tables
-- `users` - User accounts and authentication
-- `issues` - Data quality issues
-- `issue_comments` - Issue discussion threads
-- `notifications` - In-system notifications
-- `audit_logs` - System activity tracking
-- `password_history` - Password change history
-
-See `Documentation/Database-Schema.md` for detailed schema.
-
----
-
-## 📈 Reporting Features
-
-### Available Reports
-- Issues by Department
-- Issues by Status
-- Issues by Priority
-- Issues by Date Range
-- User Activity Reports
-- Resolution Time Analytics
-
-### Export Formats
-- ✅ Excel (.xlsx) with formatting
-- ✅ Professional styling and branding
-- ✅ Multiple worksheets for different views
-
----
-
-## 🧪 Testing
-
-### Backend Testing Guide
-See `Backend/DQIMS/NOTIFICATION-TESTING-GUIDE.md` for comprehensive testing procedures.
-
-### Quick Test
-```bash
-# Test backend health
-curl http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@rra.gov.rw","password":"Admin@123"}'
-```
-
----
+*See `Database-Transfer-Package/DATABASE-DOCUMENTATION.md` for complete list of users*
 
 ## 📚 Documentation
 
-- **NOTIFICATION-SYSTEM-COMPLETE.md** - Email notification architecture
-- **NOTIFICATION-TESTING-GUIDE.md** - Testing procedures
-- **NOTIFICATION-QUICK-REFERENCE.md** - Quick reference card
-- **Database-Schema.md** - Complete database documentation
-- **SEEDED-DATA-SUMMARY.md** - Test data reference
-- **PlantUML/** - System architecture diagrams
+### Available Documentation
 
----
+- **[Database Setup Guide](Database-Transfer-Package/README-SETUP-GUIDE.md)** - Complete database setup instructions
+- **[Database Documentation](Database-Transfer-Package/DATABASE-DOCUMENTATION.md)** - Schema and relationships
+- **[Staff Dashboard Fix](START-HERE-STAFF-FIX.md)** - Latest feature implementation
+- **[Color Customization Guide](Frontend/COLOR-CUSTOMIZATION-GUIDE.md)** - UI theming guide
 
-## 🔒 Security Features
+## 🎨 User Roles & Permissions
 
-- ✅ JWT-based authentication
-- ✅ Password encryption (BCrypt)
-- ✅ Role-based authorization
-- ✅ CORS configuration
-- ✅ Input validation
-- ✅ SQL injection prevention (JPA)
-- ✅ XSS protection
-- ✅ Audit logging
+### Admin
+- ✅ View all issues across all departments
+- ✅ Manage users (create, update, deactivate)
+- ✅ Manage departments
+- ✅ Generate system-wide reports
+- ✅ Access complete audit logs
+- ✅ System configuration
 
----
+### Head of Department (HOD)
+- ✅ View all issues in their department
+- ✅ Assign issues to staff members
+- ✅ Change issue priority and status
+- ✅ Close resolved issues
+- ✅ Generate department reports
+- ✅ View department activity logs
 
-## 🛠️ Configuration
+### Staff
+- ✅ Report new data quality issues
+- ✅ View issues assigned to them
+- ✅ View issues they reported
+- ✅ Update status of assigned issues
+- ✅ Add comments to issues
+- ✅ Upload validation files
+- ✅ Receive notifications
 
-### Environment Variables (Production)
-```bash
-# Database
-export DB_HOST=localhost
-export DB_PORT=5432
-export DB_NAME=dqims_db
-export DB_USER=your_user
-export DB_PASSWORD=your_password
+## 📊 Features in Detail
 
-# JWT
-export JWT_SECRET=your-512-bit-secret-key
-export JWT_EXPIRATION=3600000
+### Issue Management
+- Create, track, and resolve data quality issues
+- Priority levels: High, Medium, Low
+- Status tracking: Open → In Progress → Resolved → Closed
+- Issue types: Missing, Duplicate, Incorrect, Inconsistent
+- File attachments support
+- Comment system for collaboration
 
-# Email
-export MAIL_USERNAME=your-email@gmail.com
-export MAIL_PASSWORD=your-app-password
+### Data Validation
+- CSV file upload and parsing
+- Real-time validation with error reporting
+- Preview data before acceptance
+- Validation session management
+- Error categorization and details
 
-# Application
-export SERVER_PORT=8080
-export CORS_ALLOWED_ORIGINS=http://localhost:3000
-```
+### Notifications
+- Email notifications for issue updates
+- In-system notification center
+- Real-time updates on status changes
+- Assignment notifications
+- Comment notifications
 
----
+### Reporting
+- Excel reports with statistics and issue listings
+- Word reports with professional formatting
+- Date range filtering
+- Department filtering
+- Status filtering
+- Complete audit trail included
+
+### Audit Logging
+- Track all system activities
+- User action history
+- Issue lifecycle tracking
+- Export audit logs
 
 ## 🚀 Deployment
 
-### Backend (Production)
-```bash
-# Build JAR
-./mvnw clean package -DskipTests
+### Production Deployment Checklist
 
-# Run
+- [ ] Update database credentials in `application.properties`
+- [ ] Set strong JWT secret key
+- [ ] Configure production email server
+- [ ] Set `spring.jpa.hibernate.ddl-auto=validate` (not update)
+- [ ] Enable HTTPS
+- [ ] Configure CORS for production domain
+- [ ] Set up database backups
+- [ ] Configure log levels
+- [ ] Set up monitoring
+
+### Building for Production
+
+**Backend:**
+```bash
+cd Backend/DQIMS
+mvn clean package
 java -jar target/dqims-1.0.0.jar
 ```
 
-### Frontend (Production)
+**Frontend:**
 ```bash
-# Build for production
+cd Frontend
 npm run build
-
-# Serve with nginx or deploy to cloud
+# Deploy the 'dist' folder to your web server
 ```
 
----
+## 🧪 Testing
 
-## 📝 Project Information
+### Test User Accounts
+All test accounts use password: `password`
 
-- **Project Name**: Data Quality Issues Management System (DQIMS)
-- **Organization**: Rwanda Revenue Authority (RRA)
-- **Type**: Final Year Project
-- **Author**: Noella Urumuri
-- **Academic Year**: 2025/2026
-- **Version**: 1.0.0
-- **License**: Proprietary (RRA)
+### Quick Test Scenarios
 
----
+1. **Admin Flow**: Login as admin → Manage users → View all issues → Generate reports
+2. **HOD Flow**: Login as HOD → View department issues → Assign to staff → Close resolved
+3. **Staff Flow**: Login as staff → Report issue → Track status → Update assigned issues
+
+## 🔒 Security Features
+
+- JWT-based authentication
+- Password encryption with BCrypt
+- Role-based authorization
+- CORS configuration
+- SQL injection prevention (JPA)
+- XSS protection
+- CSRF protection
+
+## 📝 API Documentation
+
+### Base URL
+```
+http://localhost:8080/api/v1
+```
+
+### Key Endpoints
+
+#### Authentication
+- `POST /auth/login` - User login
+- `POST /auth/register` - User registration (Admin only)
+
+#### Issues
+- `GET /issues` - Get filtered issues
+- `POST /issues` - Create new issue
+- `PUT /issues/{id}` - Update issue
+- `GET /issues/{id}` - Get issue details
+- `POST /issues/{id}/comments` - Add comment
+
+#### Reports
+- `POST /reports/excel` - Generate Excel report
+- `POST /reports/word` - Generate Word report
+
+#### Data Validation
+- `POST /data-validation/upload` - Upload CSV file
+- `GET /data-validation/sessions` - Get validation sessions
+
+*See backend controllers for complete API documentation*
 
 ## 🤝 Contributing
 
-This is an academic/organizational project. For contributions or suggestions:
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+This is a Final Year Project for academic purposes. However, suggestions and feedback are welcome!
 
----
+## 📄 License
 
-## 📞 Support & Contact
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-For issues, questions, or support:
-- **Email**: urumurinoella3@gmail.com
-- **GitLab**: https://gitlab.com/urumulinoella/final_exam_project
+## 👨‍💻 Author
 
----
+**Noella Urumuri**
+- GitHub: [@urumurinoella3-beep](https://github.com/urumurinoella3-beep)
+- Email: noella.urumuri@student.ur.ac.rw
 
-## 🏆 Acknowledgments
+## 🎓 Academic Information
 
-- Rwanda Revenue Authority (RRA) - Project sponsorship and requirements
-- Academic Supervisors - Guidance and feedback
-- Spring Boot & React Communities - Technical support
+- **Institution**: University of Rwanda
+- **Program**: Bachelor of Science in Computer Science
+- **Year**: Final Year (2026)
+- **Project Type**: Final Year Project
+- **Supervisor**: [Supervisor Name]
 
----
+## 🙏 Acknowledgments
 
-## 📅 Project Milestones
+- Rwanda Revenue Authority (RRA) for project inspiration
+- University of Rwanda for academic support
+- Spring Boot and React communities for excellent documentation
+- All open-source contributors whose libraries made this project possible
 
-- ✅ Requirements Analysis - Completed
-- ✅ System Design - Completed
-- ✅ Database Design - Completed
-- ✅ Backend Development - Completed
-- ✅ Frontend Development - Completed
-- ✅ Notification System - Completed
-- ✅ Testing - In Progress
-- ⏳ Deployment - Pending
-- ⏳ Documentation - Finalization
+## 📞 Support
+
+For questions or issues:
+1. Open an issue on GitHub
+2. Contact via email: noella.urumuri@student.ur.ac.rw
+3. Check documentation in the `Database-Transfer-Package` folder
+
+## 🗺️ Project Structure
+
+```
+final-year-project/
+├── Backend/
+│   └── DQIMS/
+│       ├── src/main/java/rw/rra/dqims/
+│       │   ├── config/          # Security, CORS, Async config
+│       │   ├── controller/      # REST API controllers
+│       │   ├── dto/            # Data Transfer Objects
+│       │   ├── entity/         # JPA entities
+│       │   ├── repository/     # Database repositories
+│       │   ├── service/        # Business logic
+│       │   └── exception/      # Custom exceptions
+│       ├── src/main/resources/
+│       │   └── application.properties
+│       └── pom.xml
+├── Frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── components/    # Reusable UI components
+│   │   │   ├── context/       # React Context (Auth, etc.)
+│   │   │   ├── pages/         # Page components
+│   │   │   ├── services/      # API service layer
+│   │   │   └── types/         # TypeScript types
+│   │   └── main.tsx
+│   ├── package.json
+│   └── vite.config.ts
+├── Database-Transfer-Package/
+│   ├── COMPLETE-DATABASE-SCHEMA.sql
+│   ├── SEED-DATA.sql
+│   ├── README-SETUP-GUIDE.md
+│   └── DATABASE-DOCUMENTATION.md
+├── Documentation/              # Thesis diagrams (PlantUML)
+├── test_taxpayers_sample.csv   # Sample data for testing
+└── README.md                   # This file
+```
+
+## 🔄 Recent Updates
+
+### Latest Features (July 2026)
+- ✅ Staff dashboard now shows both assigned and reported issues
+- ✅ Data validation module with CSV upload
+- ✅ Enhanced reporting with Excel and Word formats
+- ✅ Complete audit logging system
+- ✅ Email notification system
+- ✅ Improved UI with better color schemes
+- ✅ Bug fixes for issue creation and CORS
+
+See commit history for detailed changes.
 
 ---
 
 **Built with ❤️ for Rwanda Revenue Authority**
-
-*Last Updated: June 9, 2026*
