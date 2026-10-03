@@ -29,7 +29,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v1/reports")
-@CrossOrigin(origins = "*")
 public class ReportController {
     private final IssueRepository issueRepository;
     private final UserRepository userRepository;

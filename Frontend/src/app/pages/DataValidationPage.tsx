@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ValidationError } from '../types';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle2, XCircle, Download, Plus, FileText, File } from 'lucide-react';
+import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle2, XCircle, Download, Plus, FileText, File, Loader2 } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 import { useNavigate } from 'react-router';
+import { validationService, ValidationError, PreviewData } from '../services/validationService';
+import { toast } from 'sonner';
 
 export function DataValidationPage() {
   const { currentUser } = useAuth();
@@ -15,8 +16,9 @@ export function DataValidationPage() {
   const [fileType, setFileType] = useState<string>('');
   const [totalRecords, setTotalRecords] = useState(0);
   const [passedRecords, setPassedRecords] = useState(0);
-  const [previewData, setPreviewData] = useState<any[]>([]);
-  const [isLimitedValidation, setIsLimitedValidation] = useState(false);
+  const [previewData, setPreviewData] = useState<PreviewData[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [sessionId, setSessionId] = useState<number | null>(null);
 
   if (!currentUser) return null;
 
@@ -28,7 +30,7 @@ export function DataValidationPage() {
     return <File className="w-5 h-5 text-gray-600" />;
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -36,71 +38,82 @@ export function DataValidationPage() {
     const extension = file.name.split('.').pop()?.toLowerCase() || '';
     setFileType(extension);
 
-    // Only CSV and Excel are supported
-    setIsLimitedValidation(false);
+    // Validate file type
+    if (!['csv', 'xlsx', 'xls'].includes(extension)) {
+      toast.error('Only CSV and Excel files are supported');
+      return;
+    }
 
-    // Full validation for CSV/Excel
-    const mockPreviewData = [
-      { row: 1, TIN: '123456789', Name: 'ABC Company Ltd', Amount: '50000', Email: 'abc@company.rw' },
-      { row: 2, TIN: '987654321', Name: 'XYZ Trading', Amount: '75000', Email: 'xyz@trading.rw' },
-      { row: 3, TIN: '456789123', Name: 'LMN Enterprises', Amount: '100000', Email: 'lmn@enterprise.rw' },
-      { row: 4, TIN: '789123456', Name: 'PQR Services', Amount: '25000', Email: 'pqr@services.rw' },
-      { row: 5, TIN: '', Name: 'RST Corp', Amount: '60000', Email: 'rst@corp.rw' },
-    ];
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      toast.error('File size must not exceed 10MB');
+      return;
+    }
 
-    const mockErrors: ValidationError[] = [
-      {
-        row: 5,
-        errorType: 'COMPLETENESS',
-        field: 'TIN',
-        description: 'Missing TIN value',
-        value: '',
-      },
-      {
-        row: 12,
-        errorType: 'ACCURACY',
-        field: 'Amount',
-        description: 'Negative amount not allowed',
-        value: '-5000',
-      },
-      {
-        row: 18,
-        errorType: 'UNIQUENESS',
-        field: 'TIN',
-        description: 'Duplicate TIN: 123456789',
-        value: '123456789',
-      },
-      {
-        row: 23,
-        errorType: 'FORMAT',
-        field: 'Email',
-        description: 'Invalid email format',
-        value: 'invalid.email',
-      },
-      {
-        row: 31,
-        errorType: 'COMPLETENESS',
-        field: 'Name',
-        description: 'Missing taxpayer name',
-        value: '',
-      },
-      {
-        row: 45,
-        errorType: 'UNIQUENESS',
-        field: 'TIN',
-        description: 'Duplicate TIN: 987654321',
-        value: '987654321',
-      },
-    ];
-
-    setPreviewData(mockPreviewData);
-    setValidationResults(mockErrors);
-    setTotalRecords(50);
-    setPassedRecords(44);
+    setIsUploading(true);
+    
+    try {
+      // Upload file and get validation results
+      const response = await validationService.uploadFile(file);
+      
+      setSessionId(response.id);
+      setValidationResults(response.errors);
+      setTotalRecords(response.totalRecords);
+      setPassedRecords(response.passedRecords);
+      setPreviewData(response.previewData || []);
+      
+      toast.success(`File validated successfully! Found ${response.failedRecords} error(s) in ${response.totalRecords} records`);
+      
+    } catch (error: any) {
+      console.error('Validation error:', error);
+      toast.error(error.response?.data?.message || 'Failed to validate file. Please try again.');
+      
+      // Reset state on error
+      setValidationResults(null);
+      setPreviewData([]);
+      setTotalRecords(0);
+      setPassedRecords(0);
+      setSessionId(null);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleDownloadErrors = () => {
-    alert('Error report will be downloaded as CSV file');
+    if (!validationResults || validationResults.length === 0) {
+      toast.error('No errors to download');
+      return;
+    }
+
+    // Create CSV content
+    const headers = ['Row', 'Error Type', 'Field', 'Description', 'Current Value'];
+    const rows = validationResults.map(error => [
+      error.row,
+      error.errorType,
+      error.field,
+      error.description,
+      error.value || '(empty)'
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `validation_errors_${fileName}_${new Date().getTime()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success('Error report downloaded successfully');
   };
 
   const handleCreateIssue = () => {
@@ -142,8 +155,17 @@ export function DataValidationPage() {
               />
               <Button size="sm" className="bg-[#20603D] hover:bg-[#1a4d31] h-8" asChild>
                 <span>
-                  <Upload className="w-3 h-3 mr-1" />
-                  {fileName ? 'Choose Different File' : 'Choose File'}
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-3 h-3 mr-1" />
+                      {fileName ? 'Choose Different File' : 'Choose File'}
+                    </>
+                  )}
                 </span>
               </Button>
             </label>
@@ -180,20 +202,20 @@ export function DataValidationPage() {
                   <thead className="bg-gray-50 border-b">
                     <tr>
                       <th className="px-3 py-2 text-left font-semibold text-gray-700">Row</th>
-                      <th className="px-3 py-2 text-left font-semibold text-gray-700">TIN</th>
-                      <th className="px-3 py-2 text-left font-semibold text-gray-700">Name</th>
-                      <th className="px-3 py-2 text-left font-semibold text-gray-700">Amount</th>
-                      <th className="px-3 py-2 text-left font-semibold text-gray-700">Email</th>
+                      {previewData.length > 0 && Object.keys(previewData[0].data).map((key) => (
+                        <th key={key} className="px-3 py-2 text-left font-semibold text-gray-700">{key}</th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {previewData.map((row, index) => (
+                    {previewData.map((rowData, index) => (
                       <tr key={index} className="hover:bg-gray-50">
-                        <td className="px-3 py-2 font-mono">{row.row}</td>
-                        <td className="px-3 py-2 font-mono">{row.TIN || <span className="text-red-500">(empty)</span>}</td>
-                        <td className="px-3 py-2">{row.Name}</td>
-                        <td className="px-3 py-2 font-mono">{row.Amount}</td>
-                        <td className="px-3 py-2 text-gray-600">{row.Email}</td>
+                        <td className="px-3 py-2 font-mono">{rowData.row}</td>
+                        {Object.entries(rowData.data).map(([key, value]) => (
+                          <td key={key} className="px-3 py-2 font-mono">
+                            {value || <span className="text-red-500">(empty)</span>}
+                          </td>
+                        ))}
                       </tr>
                     ))}
                   </tbody>

@@ -52,7 +52,8 @@ public class IssueService {
         } else if (me.getRole() == UserRole.HOD) {
             page = issueRepository.findByDepartment(me.getDepartment(), pageable);
         } else {
-            page = issueRepository.findByAssignedTo(me, pageable);
+            // STAFF: Show issues they are assigned to OR issues they reported
+            page = issueRepository.findByAssignedToOrReportedBy(me, me, pageable);
         }
         return page.map(this::toResponse);
     }
@@ -66,9 +67,9 @@ public class IssueService {
                 .title(req.title())
                 .description(req.description())
                 .source(req.source())
-                .dataElement(req.dataElement())
+                .dataElement("N/A")  // Default value since field removed from form
                 .issueType(req.issueType())
-                .severity(req.severity())
+                .severity("MEDIUM")  // Default value since field removed from form
                 .priority(req.priority())
                 .department(req.department())
                 .status(IssueStatus.OPEN)

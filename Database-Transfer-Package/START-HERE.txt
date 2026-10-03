@@ -1,0 +1,167 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║         DQIMS DATABASE TRANSFER PACKAGE                       ║
+║         Complete Database Setup for New Computer              ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📦 WELCOME!
+
+This package contains everything you need to set up the DQIMS database
+on a new computer.
+
+═══════════════════════════════════════════════════════════════
+
+🚀 QUICK START - READ THESE IN ORDER:
+
+1. 📄 README-SETUP-GUIDE.md        ← START HERE!
+   Complete setup instructions with screenshots
+
+2. 📄 PACKAGE-SUMMARY.md
+   Quick overview of what's included
+
+3. 📄 CREDENTIALS.txt
+   All passwords and connection information
+
+4. 📄 DATABASE-DOCUMENTATION.md
+   Technical reference for all tables
+
+═══════════════════════════════════════════════════════════════
+
+💾 DATABASE FILES:
+
+□ COMPLETE-DATABASE-SCHEMA.sql
+  Creates all 10 tables with indexes and constraints
+
+□ SEED-DATA.sql
+  Populates database with 33 users and 8 departments
+
+□ create-backup.bat
+  Windows script to create database backups
+
+═══════════════════════════════════════════════════════════════
+
+⚡ 3-STEP QUICK SETUP:
+
+Step 1: Install PostgreSQL 15+
+        https://www.postgresql.org/download/
+        Password: noella@090
+
+Step 2: Create Database
+        CREATE DATABASE dqims_db;
+
+Step 3: Import SQL Files
+        psql -U postgres -d dqims_db -f COMPLETE-DATABASE-SCHEMA.sql
+        psql -U postgres -d dqims_db -f SEED-DATA.sql
+
+═══════════════════════════════════════════════════════════════
+
+🔐 DEFAULT CREDENTIALS:
+
+Database:
+  Name:     dqims_db
+  User:     postgres
+  Password: noella@090
+  Port:     5432
+
+Application:
+  Admin:    admin@rra.gov.rw / password
+  HODs:     {name}@rra.gov.rw / password
+  Staff:    {name}@rra.gov.rw / password
+
+═══════════════════════════════════════════════════════════════
+
+📊 WHAT'S INCLUDED:
+
+✓ 10 Database Tables (all system tables)
+✓ 33 User Accounts (1 Admin + 8 HODs + 24 Staff)
+✓ 8 Departments (VAT, IT, Customs, etc.)
+✓ Complete Documentation
+✓ Setup Scripts
+✓ Backup Utility
+
+═══════════════════════════════════════════════════════════════
+
+⏱️ SETUP TIME: 20-30 minutes
+
+═══════════════════════════════════════════════════════════════
+
+📖 DOCUMENTATION MAP:
+
+For Complete Setup:    → README-SETUP-GUIDE.md
+For Quick Overview:    → PACKAGE-SUMMARY.md
+For Login Info:        → CREDENTIALS.txt
+For Table Details:     → DATABASE-DOCUMENTATION.md
+For Backup:            → create-backup.bat
+
+═══════════════════════════════════════════════════════════════
+
+✅ VERIFICATION:
+
+After setup, you should have:
+  □ PostgreSQL running
+  □ Database 'dqims_db' created
+  □ 10 tables created
+  □ 33 users seeded
+  □ 8 departments seeded
+  □ Can login to pgAdmin
+  □ Can login to application
+
+═══════════════════════════════════════════════════════════════
+
+🆘 NEED HELP?
+
+1. Check README-SETUP-GUIDE.md (troubleshooting section)
+2. Verify CREDENTIALS.txt (correct passwords)
+3. Check PostgreSQL is running (services.msc)
+4. Review PostgreSQL logs
+
+═══════════════════════════════════════════════════════════════
+
+⚠️ SECURITY REMINDERS:
+
+1. Keep CREDENTIALS.txt secure
+2. Change default passwords before production
+3. Never commit sensitive files to Git
+4. Create regular backups
+
+═══════════════════════════════════════════════════════════════
+
+🎯 RECOMMENDED READING ORDER:
+
+1. This file (START-HERE.txt)
+2. README-SETUP-GUIDE.md (complete instructions)
+3. PACKAGE-SUMMARY.md (quick reference)
+4. DATABASE-DOCUMENTATION.md (technical details)
+5. CREDENTIALS.txt (as needed)
+
+═══════════════════════════════════════════════════════════════
+
+📞 QUICK REFERENCE:
+
+PostgreSQL Command:
+  psql -U postgres -d dqims_db
+
+pgAdmin Connection:
+  Host: localhost, Port: 5432, Database: dqims_db
+  User: postgres, Password: noella@090
+
+Application URLs:
+  Backend:  http://localhost:8080
+  Frontend: http://localhost:5173
+
+═══════════════════════════════════════════════════════════════
+
+🎉 READY TO BEGIN!
+
+Open README-SETUP-GUIDE.md and follow the instructions.
+
+═══════════════════════════════════════════════════════════════
+
+Package Version: 1.0
+Created: June 16, 2026
+Database: dqims_db (PostgreSQL 15+)
+
+Good Luck! 🚀
+
+═══════════════════════════════════════════════════════════════

@@ -1,0 +1,16 @@
+TIN,Name,Amount,Email
+123456789,Rwanda Revenue Authority,1000000.50,rra@rra.gov.rw
+234567890,Kigali Trading Ltd,500000.00,info@kigali-trading.rw
+345678901,East Africa Imports,750000.00,contact@ea-imports.com
+456789012,Invalid Amount Corp,-50000.00,valid@email.com
+123456789,Duplicate TIN Company,100000.00,duplicate@company.rw
+INVALID99,Bad TIN Format,200000.00,bad@tin.com
+567890123,,300000.00,missing-name@company.rw
+678901234,Valid Company Three,400000.00,invalid-email-format
+789012345,Complete Data Corp,250000.00,complete@data.rw
+890123456,Test Enterprise,0,test@enterprise.com
+901234567,Validation Test Inc,99999.99,validation@test.com
+012345678,Wrong TIN,100.00,wrong@tin.com
+111111111,Missing Email Company,50000.00,
+222222222,Special Characters Ltd,1500.50,special@chars.rw
+333333333,Number Test Corp,123456789.99,numbers@test.com

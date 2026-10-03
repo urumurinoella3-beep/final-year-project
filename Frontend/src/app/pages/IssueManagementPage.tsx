@@ -24,9 +24,7 @@ export function IssueManagementPage() {
     title: '',
     description: '',
     source: 'VAT',
-    dataElement: '',
     issueType: 'MISSING',
-    severity: 'MEDIUM',
     priority: 'MEDIUM',
     department: currentUser?.department || departments[0] || 'Finance',
     isDelegated: false,
@@ -70,9 +68,7 @@ export function IssueManagementPage() {
       title: '',
       description: '',
       source: 'VAT',
-      dataElement: '',
       issueType: 'MISSING',
-      severity: 'MEDIUM',
       priority: 'MEDIUM',
       department: currentUser.department || departments[0] || 'Finance',
       isDelegated: false,
@@ -189,15 +185,6 @@ export function IssueManagementPage() {
                     </Select>
                   </div>
                 </div>
-                <div>
-                  <Label className="text-xs">Data Element</Label>
-                  <Input
-                    value={formData.dataElement}
-                    onChange={(e) => setFormData({ ...formData, dataElement: e.target.value })}
-                    placeholder="e.g., TIN, Name, Amount"
-                    className="mt-1 h-8 text-sm"
-                  />
-                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs">Issue Type</Label>
@@ -214,32 +201,18 @@ export function IssueManagementPage() {
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs">Severity</Label>
-                    <Select value={formData.severity} onValueChange={(v) => setFormData({ ...formData, severity: v as any })}>
+                    <Label className="text-xs">Priority</Label>
+                    <Select value={formData.priority} onValueChange={(v) => setFormData({ ...formData, priority: v as any })}>
                       <SelectTrigger className="mt-1 h-8 text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="CRITICAL">Critical</SelectItem>
                         <SelectItem value="HIGH">High</SelectItem>
                         <SelectItem value="MEDIUM">Medium</SelectItem>
                         <SelectItem value="LOW">Low</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-                <div>
-                  <Label className="text-xs">Priority</Label>
-                  <Select value={formData.priority} onValueChange={(v) => setFormData({ ...formData, priority: v as any })}>
-                    <SelectTrigger className="mt-1 h-8 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="HIGH">High</SelectItem>
-                      <SelectItem value="MEDIUM">Medium</SelectItem>
-                      <SelectItem value="LOW">Low</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
                 <div>
                   <Label className="text-xs">Description</Label>
